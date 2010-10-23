@@ -1,0 +1,9 @@
+#!/bin/bash
+FUSES=`avr-objdump -s -j .fuse $* | grep -P -o " \d+ [0-9a-z]+" | cut -f3 -d" "` 
+LFUSE=${FUSES:0:2}
+HFUSE=${FUSES:2:2}
+EFUSE=${FUSES:4:2}
+
+echo "LFUSE=0x$LFUSE"
+echo "HFUSE=0x$HFUSE"
+echo "EFUSE=0x$EFUSE"

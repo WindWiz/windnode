@@ -1,0 +1,29 @@
+WindWiz
+=====================
+WindWiz is an open-source weatherstation project. Its primary purpose is to act
+as a wind sensor node along the coasts of southern Sweden. The measurements are 
+sent back using IP over the cellular network (GPRS).
+
+Features:
+---------
+* Measurements of wind speed and direction.
+* Measurements of air temperature.
+* Remote control/configuration via SMS.
+* Periodical transmission of current wind conditions over GPRS to a 
+configurable IP.
+* Rugged design, must withstand rain, snow, temperatures from -20C to +40C.
+* Solar powered, with battery backup.
+* Reliable, 24/7 operation.
+* Total buildcost, ~6000 SEK (swedish currency)
+
+The primary focus of this project is the construction of the actual sensor node
+hardware. It includes schematics of the electronics, software (with sourcecode)
+running inside the embedded microcontroller, and mechanical details on the 
+rugged casing. 
+
+The data samples are transmitted over IP to another system responsible for data
+collection and visualization. This is outside the scope of this project.
+
+More information is available at the project homepage:
+
+  http://vind.minimum.se/ (swedish only)
