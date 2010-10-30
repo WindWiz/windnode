@@ -16,7 +16,7 @@ FUSES=$(PROG).fuses
 MCU=atmega168
 
 CFLAGS  += -Wall -pedantic -Os -g -std=c99 -mmcu=$(MCU)
-LDFLAGS += -mmcu=atmega168 
+LDFLAGS += -mmcu=$(MCU)
 
 all: $(PROG) $(IHEX)
 
