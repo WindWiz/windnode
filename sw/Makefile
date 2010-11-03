@@ -10,7 +10,7 @@ ELFFUSE=./elf-fuse
 
 PROG=windwiz
 IHEX=windwiz.ihex
-OBJS=main.o hwparam.o uart.o
+OBJS=main.o hwparam.o uart.o adc.o wind.o
 FUSES=$(PROG).fuses
 
 MCU=atmega168
