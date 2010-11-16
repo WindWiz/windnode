@@ -26,7 +26,7 @@ $(PROG): $(OBJS)
 
 # Generate Intel Hex image from ELF binary, also remove .fuse section
 $(IHEX): $(PROG)
-	$(OBJCOPY) -R .fuse -S -O ihex $^ $@ 
+	$(OBJCOPY) -R .fuse -R .eeprom -R .lock -R .signature -S -O ihex $^ $@ 
 
 # Extract fuse bytes from ELF binary (firmware needs to use the AVR libc FUSE API)
 %.fuses: $(PROG)
