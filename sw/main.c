@@ -17,12 +17,15 @@ int main(void)
 	
 	cli();
 
+	wind_power_up();
+	wind_speed_start();
 	while (1) {
-		printf("DIR=%d ", wind_sample_direction());
-		wind_sample_speed_start();
-		_delay_ms(200);
-		printf("SPD=%d\n", wind_sample_speed_stop());
+		printf("DIR=%d ", wind_direction_sample());
+		printf("SPD=%d\n", wind_speed_sample());
+		_delay_ms(2000);	
 	}
+	wind_speed_stop();
+	wind_power_down();
 
 	return 0;
 }
