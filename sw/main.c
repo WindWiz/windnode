@@ -8,14 +8,17 @@
 
 #include "uart.h"
 #include "wind.h"
+#include "swuart.h"
+
+static FILE swuart;
 
 int main(void)
 {
 	uart_init(UART_BAUD(2400, F_CPU));
+	swuart_init(SWUART_BAUD(2400, F_CPU), &swuart);
+	wind_init();
 	
-	wind_init();		
-	
-	cli();
+	sei();
 
 	wind_power_up();
 	wind_speed_start();
