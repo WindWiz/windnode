@@ -1,3 +1,12 @@
+#ifndef _UART_H_
+#define _UART_H_
+
 #define UART_BAUD(baud, f) ((f)/((baud)*16l)-1)
 
-void uart_init(unsigned int ubrr);
+#include <stdio.h>
+
+typedef int (*uart_orun_handler_t)(void);
+
+void uart_init(unsigned int ubrr, FILE *stream, uart_orun_handler_t orun);
+
+#endif
