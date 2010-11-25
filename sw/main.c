@@ -12,11 +12,15 @@
 
 static FILE swuart;
 
+static FILE hw_uart;
+
 int main(void)
 {
-	uart_init(UART_BAUD(2400, F_CPU));
+	uart_init(UART_BAUD(2400, F_CPU), &hw_uart, NULL);
 	swuart_init(SWUART_BAUD(2400, F_CPU), &swuart);
 	wind_init();
+
+	stdout = &hw_uart;
 	
 	sei();
 
