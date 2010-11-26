@@ -1,4 +1,4 @@
 #include <avr/io.h>
 #include <stdint.h>
 
-#define F_CPU ((uint32_t) 1*1000000)
+#define F_CPU ((uint32_t) 8*1000000)
