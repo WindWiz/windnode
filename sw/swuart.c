@@ -44,7 +44,6 @@
 #include <stdio.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <util/atomic.h>
 #include "ringbuf.h"
 
 /* RX must be INT0 (PD2 on ATmega168) */
@@ -60,6 +59,11 @@
 #define DATAWIDTH (8)
 #define TX_PRESCALER (_BV(CS22))		/* 64 */
 #define RX_PRESCALER (_BV(CS01) | _BV(CS00))	/* 64 */
+
+#define RX_IRQ_DISABLE()	TIMSK0 &= ~(_BV(OCIE0A))
+#define RX_IRQ_ENABLE()		TIMSK0 |= _BV(OCIE0A)
+#define TX_IRQ_DISABLE()	TIMSK2 &= ~(_BV(OCIE2A))
+#define TX_IRQ_ENABLE()		TIMSK2 |= _BV(OCIE2A)
 
 enum {
 	TX_IDLE,
@@ -96,6 +100,7 @@ ISR(TIMER0_COMPA_vect)
 	uint8_t rxbit = RX_PIN & _BV(RX);
 
 	if (port.rx_bitsleft == 0) {
+		/* At this point rxbit is the stopbit. High means valid data */
 		if (rxbit && !rb_is_full(&port.rx_buf))
 			rb_insert_tail(&port.rx_buf, port.rx_sample);
 
@@ -158,36 +163,39 @@ static int swuart_getc(FILE *stream)
 {
 	int ret = 0;
 
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+	RX_IRQ_DISABLE();
 		if (rb_is_empty(&port.rx_buf))
 			ret = EOF;
 		else
 			ret = rb_remove_head(&port.rx_buf);
-	}
+	RX_IRQ_ENABLE();
 
 	return ret;
 }
 
 static int swuart_putc(char c, FILE *stream)
 {
-	int ret = 0;
+	int queued = 0;
 
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+	do {
 		if (port.tx_state == TX_IDLE) {
 			port.tx_bitsleft = DATAWIDTH;
 			port.tx_sample = c;
 			port.tx_state = TX_STARTBIT;
 			TCNT2 = 0;			
 			TCCR2B |= TX_PRESCALER;
+			queued = 1;
 		} else {
-			if (rb_is_full(&port.tx_buf))
-				ret = 1;
-			else
+			TX_IRQ_DISABLE();
+			if (!rb_is_full(&port.tx_buf)) {
 				rb_insert_tail(&port.tx_buf, c);
+				queued = 1;
+			}
+			TX_IRQ_ENABLE();
 		}
-	}
+	} while (!queued);
 
-	return ret;
+	return 0;
 }
 
 void swuart_init(unsigned int btime, FILE *stream)
@@ -212,10 +220,11 @@ void swuart_init(unsigned int btime, FILE *stream)
 	/* CTC Mode */
 	TCCR0A = _BV(WGM01);
 	TCCR2A = _BV(WGM21);
-
-	TIMSK0 = _BV(OCIE0A);
-	TIMSK2 = _BV(OCIE2A);
 		
 	fdev_setup_stream(stream, swuart_putc, swuart_getc, _FDEV_SETUP_RW);
+
+	/* At this point, the timers are not started so its safe to unmask */
+	RX_IRQ_ENABLE();
+	TX_IRQ_ENABLE();
 }
 
