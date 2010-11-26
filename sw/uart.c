@@ -36,7 +36,6 @@
 #include <stdio.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <util/atomic.h>
 #include "ringbuf.h"
 #include "uart.h"
 
@@ -47,6 +46,11 @@ struct uart_private {
 };
 
 static struct uart_private port;
+
+#define TX_IRQ_DISABLE()	UCSR0B &= ~(_BV(UDRIE0))
+#define TX_IRQ_ENABLE()		UCSR0B |= _BV(UDRIE0)
+#define RX_IRQ_DISABLE()	UCSR0B &= ~(_BV(RXCIE0))
+#define RX_IRQ_ENABLE()		UCSR0B |= _BV(RXCIE0)
 
 ISR(USART_RX_vect)
 {
@@ -62,37 +66,37 @@ ISR(USART_UDRE_vect)
 	if (!rb_is_empty(&port.tx))
 		UDR0 = rb_remove_head(&port.tx);
 	else
-		UCSR0B &= ~(_BV(UDRIE0));
+		TX_IRQ_DISABLE();
 }
 
 static int uart_getc(FILE *stream)
 {
 	int ret = 0;
 
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+	RX_IRQ_DISABLE();
 		if (rb_is_empty(&port.rx))
 			ret = EOF;
 		else
 			ret = rb_remove_head(&port.rx);
-	}
+	RX_IRQ_ENABLE();
 
 	return ret;
 }
 
 static int uart_putc(char c, FILE *stream)
 {
-	int ret = 0;
+	uint8_t queued = 0;
 
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-		if (rb_is_full(&port.tx))
-			ret = 1; /* avr-libc checks for != 0 */
-		else
+	do {
+		TX_IRQ_DISABLE();
+		if (!rb_is_full(&port.tx)) {
 			rb_insert_tail(&port.tx, c);
+			queued = 1;
+		}
+		TX_IRQ_ENABLE();
+	} while (!queued);
 
-		UCSR0B |= _BV(UDRIE0);
-	}
-
-	return ret;
+	return 0;
 }
 
 void uart_init(unsigned int ubrr, FILE *stream, uart_orun_handler_t orun)
@@ -112,6 +116,7 @@ void uart_init(unsigned int ubrr, FILE *stream, uart_orun_handler_t orun)
 	fdev_setup_stream(stream, uart_putc, uart_getc, _FDEV_SETUP_RW);
 
 	/* Enable */
-	UCSR0B = _BV(TXEN0) | _BV(RXEN0) | _BV(RXCIE0);
+	UCSR0B = _BV(TXEN0) | _BV(RXEN0);
+	RX_IRQ_ENABLE();
 }
 
