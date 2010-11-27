@@ -66,10 +66,10 @@
 #define TX_IRQ_ENABLE()		TIMSK2 |= _BV(OCIE2A)
 
 enum {
-	TX_IDLE,
-	TX_STARTBIT,
-	TX_DATA,
-	TX_STOPBIT,
+	UART_IDLE,
+	UART_STARTBIT,
+	UART_DATA,
+	UART_STOPBIT,
 };
 
 struct swuart_private {
@@ -80,18 +80,20 @@ struct swuart_private {
 	uint8_t rx_sample;
 	uint8_t rx_bitsleft;
 	struct ringbuf rx_buf;
+	uint8_t rx_state;
+	uint8_t btime;
 };
 
 static struct swuart_private port;
 
 ISR(INT0_vect)
 {
-	/* Startbit detected, start sampling */
-	port.rx_bitsleft = DATAWIDTH;
-	
-	/* Disable INT0 and start TX timer */
+	/* Disable INT0 and start RX timer */
 	EIMSK &= ~(_BV(INT0));
-	TCNT0 = 0;
+	
+	/* Setup to sample startbit in btime/2 */
+	port.rx_state = UART_STARTBIT;
+	TCNT0 = port.btime >> 1;	
 	TCCR0B |= RX_PRESCALER;
 }
 
@@ -99,37 +101,69 @@ ISR(TIMER0_COMPA_vect)
 {
 	uint8_t rxbit = RX_PIN & _BV(RX);
 
-	if (port.rx_bitsleft == 0) {
-		/* At this point rxbit is the stopbit. High means valid data */
-		if (rxbit && !rb_is_full(&port.rx_buf))
-			rb_insert_tail(&port.rx_buf, port.rx_sample);
+	switch (port.rx_state) {
+		case UART_IDLE:
+			/* We should never end up here */
+			break;
 
-		/* Disable timer and re-enable startbit detector */
-		TCCR0B &= ~RX_PRESCALER;
-		TIFR0 |= _BV(OCF0A);
-		EIFR  |= _BV(INTF0);
-		EIMSK |= _BV(INT0);
-	} else {
-		port.rx_sample = port.rx_sample >> 1;
-		port.rx_bitsleft--;
+		case UART_STARTBIT:
+			/* Check for valid startbit */
+			if (!rxbit)	{
+				port.rx_bitsleft = DATAWIDTH;
+				port.rx_state = UART_DATA;
+			} else {
+				/* Glitch-protection: return to idle if startbit has vanished */
+				port.rx_state = UART_IDLE;
+				TCCR0B &= ~RX_PRESCALER;
+				TIFR0 |= _BV(OCF0A);
+				EIFR  |= _BV(INTF0);
+				EIMSK |= _BV(INT0);
+			}
+			break;
 
-		if (rxbit)
-			port.rx_sample |= _BV(DATAWIDTH-1);
+		case UART_DATA:
+			port.rx_sample = port.rx_sample >> 1;
+			port.rx_bitsleft--;
+
+			if (rxbit)
+				port.rx_sample |= _BV(DATAWIDTH-1);
+
+			if (port.rx_bitsleft == 0)
+				port.rx_state = UART_STOPBIT;
+			break;
+
+		case UART_STOPBIT:
+			/* Check for valid stopbit */
+			if (rxbit) {
+				if (!rb_is_full(&port.rx_buf))
+					rb_insert_tail(&port.rx_buf, port.rx_sample);
+			} else {
+				/* XXX: Data is most likely corrupt. Signal someone? */
+			}
+
+			/* Disable timer and re-enable startbit detector */
+			port.rx_state = UART_IDLE;
+			TCCR0B &= ~RX_PRESCALER;
+			TIFR0 |= _BV(OCF0A);
+			EIFR  |= _BV(INTF0);
+			EIMSK |= _BV(INT0);
+			break;			
 	}
 }
 
 ISR(TIMER2_COMPA_vect) 
 {
 	switch (port.tx_state) {
-		case TX_IDLE:
+		case UART_IDLE:
+			/* We should never end up here */
 			break;
 		
-		case TX_STARTBIT:
+		case UART_STARTBIT:
 			TX_PORT &= ~(_BV(TX));
-			port.tx_state = TX_DATA;
+			port.tx_state = UART_DATA;
 			break;
 
-		case TX_DATA:
+		case UART_DATA:
 			if (port.tx_sample & 0x1)
 				TX_PORT |= _BV(TX);
 			else
@@ -139,21 +173,21 @@ ISR(TIMER2_COMPA_vect)
 			port.tx_bitsleft--;
 	
 			if (port.tx_bitsleft == 0)
-				port.tx_state = TX_STOPBIT;
+				port.tx_state = UART_STOPBIT;
 			break;
 
-		case TX_STOPBIT:
+		case UART_STOPBIT:
 			TX_PORT |= _BV(TX);
 
 			/* Schedule work for next cycle, if available */
 			if (!rb_is_empty(&port.tx_buf))	{
 				port.tx_bitsleft = DATAWIDTH;
 				port.tx_sample = rb_remove_head(&port.tx_buf);
-				port.tx_state = TX_STARTBIT;
+				port.tx_state = UART_STARTBIT;
 			} else {
 				TCCR2B &= ~TX_PRESCALER;
 				TIFR2 |= _BV(OCF2A);
-				port.tx_state = TX_IDLE;
+				port.tx_state = UART_IDLE;
 			}
 			break;
 	}
@@ -175,13 +209,13 @@ static int swuart_getc(FILE *stream)
 
 static int swuart_putc(char c, FILE *stream)
 {
-	int queued = 0;
+	uint8_t queued = 0;
 
 	do {
-		if (port.tx_state == TX_IDLE) {
+		if (port.tx_state == UART_IDLE) {
 			port.tx_bitsleft = DATAWIDTH;
 			port.tx_sample = c;
-			port.tx_state = TX_STARTBIT;
+			port.tx_state = UART_STARTBIT;
 			TCNT2 = 0;			
 			TCCR2B |= TX_PRESCALER;
 			queued = 1;
@@ -202,7 +236,9 @@ void swuart_init(unsigned int btime, FILE *stream)
 {
 	rb_init(&port.rx_buf);
 	rb_init(&port.tx_buf);
-	port.tx_state = TX_IDLE;
+	port.tx_state = UART_IDLE;
+	port.rx_state = UART_IDLE;
+	port.btime = btime;
 
 	RX_DDR  &= ~(_BV(RX));
 	RX_PORT |= _BV(RX);		
