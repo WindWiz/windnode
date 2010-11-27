@@ -199,7 +199,7 @@ static int swuart_getc(FILE *stream)
 
 	RX_IRQ_DISABLE();
 		if (rb_is_empty(&port.rx_buf))
-			ret = EOF;
+			ret = _FDEV_EOF;
 		else
 			ret = rb_remove_head(&port.rx_buf);
 	RX_IRQ_ENABLE();
