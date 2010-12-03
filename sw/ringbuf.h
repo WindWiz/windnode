@@ -3,12 +3,8 @@
 
 #include <stdint.h>
 
-#ifndef RINGBUF_SIZE
-#define RINGBUF_SIZE (255)
-#endif
-
 struct ringbuf {
-	uint8_t data[RINGBUF_SIZE];
+	uint8_t data[CONFIG_RINGBUF_SIZE];
 	uint8_t size;
 	uint8_t *head;
 	uint8_t *tail;
@@ -23,7 +19,7 @@ static inline void rb_init(struct ringbuf *rb)
 
 static inline uint8_t rb_is_full(struct ringbuf *rb)
 {
-	return rb->size == RINGBUF_SIZE;
+	return rb->size == CONFIG_RINGBUF_SIZE;
 }
 
 static inline uint8_t rb_is_empty(struct ringbuf *rb)
@@ -35,7 +31,7 @@ static inline void __rb_insert_tail(struct ringbuf *rb, uint8_t data)
 {
 	*rb->tail = data;
 	rb->tail++;
-	if (rb->tail == &rb->data[RINGBUF_SIZE])
+	if (rb->tail == &rb->data[CONFIG_RINGBUF_SIZE])
 		rb->tail = rb->data;
 }
 
@@ -49,7 +45,7 @@ static inline uint8_t __rb_remove_head(struct ringbuf *rb)
 {
 	uint8_t data = *rb->head;
 	rb->head++;
-	if (rb->head == &rb->data[RINGBUF_SIZE])
+	if (rb->head == &rb->data[CONFIG_RINGBUF_SIZE])
 		rb->head = rb->data;
 	return data;
 }

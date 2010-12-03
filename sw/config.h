@@ -1,0 +1,9 @@
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
+
+#define F_CPU (8000000UL)
+#define CONFIG_RINGBUF_SIZE (20)
+#define CONFIG_DEBUG_BAUDRATE (2400)
+#define CONFIG_GSM_BAUDRATE (2400)
+
+#endif

@@ -15,7 +15,7 @@ FUSES=$(PROG).fuses
 
 MCU=atmega168
 
-CFLAGS  += -Wall -pedantic -Os -g -std=c99 -mmcu=$(MCU) -DRINGBUF_SIZE=25
+CFLAGS  += -Wall -pedantic -Os -g -std=c99 -mmcu=$(MCU) -include config.h
 LDFLAGS += -mmcu=$(MCU)
 
 all: $(PROG) $(IHEX)
