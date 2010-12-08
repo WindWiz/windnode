@@ -4,7 +4,7 @@ OBJCOPY=avr-objcopy
 STRIP=avr-strip
 
 PROGTYPE=stk500v2
-PROGPORT=/dev/ttyUSB0
+PROGPORT=/dev/avrusb0
 AVRDUDE=avrdude -p $(MCU) -c $(PROGTYPE) -P $(PROGPORT)
 ELFFUSE=./elf-fuse
 
