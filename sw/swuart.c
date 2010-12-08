@@ -93,7 +93,7 @@ ISR(INT0_vect)
 	
 	/* Setup to sample startbit in btime/2 */
 	port.rx_state = UART_STARTBIT;
-	TCNT0 = port.btime >> 1;	
+	TCNT0 = port.btime/2;
 	TCCR0B |= RX_PRESCALER;
 }
 
