@@ -26,6 +26,9 @@
 #define CONFIG_DEBUG_BAUDRATE (2400)
 #define CONFIG_GSM_BAUDRATE (9600)
 
+/* Commandline interface */
+#define CONFIG_CMDLINE_SEPARATOR ";"
+
 /* Software UART */
 #define CONFIG_SWUART_RX_BIT	(PB5)
 #define CONFIG_SWUART_RX_PORT	(PORTB)
