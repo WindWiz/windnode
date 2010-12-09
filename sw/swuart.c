@@ -234,8 +234,8 @@ static int swuart_putc(char c, FILE *stream)
 
 void swuart_init(unsigned int btime, FILE *stream)
 {
-	rb_init(&port.rx_buf);
-	rb_init(&port.tx_buf);
+	rb_init(&port.rx_buf, CONFIG_SWUART_RX_BUF);
+	rb_init(&port.tx_buf, CONFIG_SWUART_TX_BUF);
 	port.tx_state = UART_IDLE;
 	port.rx_state = UART_IDLE;
 	port.btime = btime;
@@ -264,3 +264,8 @@ void swuart_init(unsigned int btime, FILE *stream)
 	TX_IRQ_ENABLE();
 }
 
+void swuart_free(void)
+{
+	rb_free(&port.rx_buf);
+	rb_free(&port.tx_buf);
+}
