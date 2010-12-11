@@ -10,7 +10,9 @@ ELFFUSE=./elf-fuse
 
 PROG=windwiz
 IHEX=windwiz.ihex
-OBJS=main.o hwparam.o uart.o adc.o wind.o eeprom_cfg.o swuart.o ringbuf.o
+SRCS=main.c hwparam.c uart.c adc.c wind.c eeprom_cfg.c swuart.c ringbuf.c
+OBJS=$(SRCS:%.c=%.o)
+DEPS=$(SRCS:%.c=%.d)
 FUSES=$(PROG).fuses
 
 MCU=atmega168
@@ -32,6 +34,9 @@ $(IHEX): $(PROG)
 %.fuses: $(PROG)
 	$(ELFFUSE) $* > $@
 
+%.d: %.c
+	$(CC) $(CFLAGS) -MM -o $@ $^
+
 # Flash firmware
 .PHONY: flash	
 flash: $(IHEX)
@@ -51,6 +56,7 @@ fuseprog: $(FUSES)
 # Clean up all generated content
 .PHONY: clean
 clean:
-	rm -f $(OBJS) $(PROG) $(IHEX) $(FUSES)
+	rm -f $(OBJS) $(PROG) $(IHEX) $(FUSES) $(DEPS)
 
 include $(FUSES)
+include $(DEPS)
