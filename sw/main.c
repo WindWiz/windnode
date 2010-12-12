@@ -15,6 +15,8 @@ int main(void)
 
 	sei();
 
+	DDRB |= _BV(PB1);
+	PORTB |= _BV(PB1);
 	while (1) {
 	}
 
