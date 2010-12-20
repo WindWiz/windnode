@@ -198,10 +198,10 @@ static int swuart_getc(FILE *stream)
 	int ret = 0;
 
 	RX_IRQ_DISABLE();
-		if (rb_is_empty(&port.rx_buf))
-			ret = _FDEV_EOF;
-		else
-			ret = rb_remove_head(&port.rx_buf);
+	if (rb_is_empty(&port.rx_buf))
+		ret = _FDEV_EOF;
+	else
+		ret = rb_remove_head(&port.rx_buf);
 	RX_IRQ_ENABLE();
 
 	return ret;
