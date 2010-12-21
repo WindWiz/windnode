@@ -28,8 +28,23 @@
 #include "swuart.h"
 #include "gsm.h"
 #include "time.h"
+#include "stackmon.h"
 
 static FILE f_debug;
+
+static int cmd_stackdepth(char *arg, char *buf, size_t buflen)
+{
+	char tmp[30];
+
+	sprintf(tmp, "Depth %d Limit %d", stackmon_maxdepth(),
+		stackmon_stacksize());
+
+	if (buflen >= strlen(tmp)) {
+		strcat(buf, tmp);
+		return strlen(tmp);
+	} else
+		return -ENOMEM;
+}
 
 static int cmd_gsmpwr(char *arg, char *buf, size_t buflen)
 {
@@ -88,6 +103,7 @@ static int cmd_gsmcfg(char *arg, char *buf, size_t buflen)
 
 /* Sorted by priority */
 static struct command *commandlist[] = {
+	CREATE_COMMAND("STACK", cmd_stackdepth),
 	CREATE_COMMAND("GSMAT", cmd_gsmat),
 	CREATE_COMMAND("GSMPWR", cmd_gsmpwr),
 	CREATE_COMMAND("GSMRST", cmd_gsmrst),
@@ -136,7 +152,8 @@ int main(void)
 
 	sei();
 
-	printf("WindNode initialized.\n");
+	printf("WindNode initialized, startup stack %d bytes\n",
+		stackmon_maxdepth());
 
 	cmdline_loop();
 
