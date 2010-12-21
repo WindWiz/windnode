@@ -99,11 +99,19 @@ static int uart_putc(char c, FILE *stream)
 	return 0;
 }
 
-void uart_init(unsigned int ubrr, FILE *stream, uart_orun_handler_t orun)
+int uart_init(unsigned int ubrr, FILE *stream, uart_orun_handler_t orun)
 {
+	int ret;
+	
 	/* Setup context */
-	rb_init(&port.rx, CONFIG_UART_RX_BUF);
-	rb_init(&port.tx, CONFIG_UART_TX_BUF);
+	ret = rb_init(&port.rx, CONFIG_UART_RX_BUF);
+	if (ret)
+		return ret;
+
+	ret = rb_init(&port.tx, CONFIG_UART_TX_BUF);
+	if (ret)
+		return ret;
+
 	port.orun = orun;
 
 	/* Baudrate */
@@ -118,6 +126,8 @@ void uart_init(unsigned int ubrr, FILE *stream, uart_orun_handler_t orun)
 	/* Enable */
 	UCSR0B = _BV(TXEN0) | _BV(RXEN0);
 	RX_IRQ_ENABLE();
+	
+	return 0;
 }
 
 void uart_free(void)
