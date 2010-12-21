@@ -86,6 +86,9 @@ struct swuart_private {
 
 static struct swuart_private port;
 
+static uint8_t tx_buffer[CONFIG_SWUART_TX_BUF];
+static uint8_t rx_buffer[CONFIG_SWUART_RX_BUF];
+
 ISR(INT0_vect)
 {
 	/* Disable INT0 and start RX timer */
@@ -232,17 +235,10 @@ static int swuart_putc(char c, FILE *stream)
 	return 0;
 }
 
-int swuart_init(unsigned int btime, FILE *stream)
+void swuart_init(unsigned int btime, FILE *stream)
 {
-	int ret;
-
-	ret = rb_init(&port.rx_buf, CONFIG_SWUART_RX_BUF);
-	if (ret)
-		return ret;
-
-	ret = rb_init(&port.tx_buf, CONFIG_SWUART_TX_BUF);
-	if (ret)
-		return ret;
+	rb_init(&port.rx_buf, &rx_buffer[0], CONFIG_SWUART_RX_BUF);
+	rb_init(&port.tx_buf, &tx_buffer[0], CONFIG_SWUART_TX_BUF);
 
 	port.tx_state = UART_IDLE;
 	port.rx_state = UART_IDLE;
@@ -270,12 +266,8 @@ int swuart_init(unsigned int btime, FILE *stream)
 	/* At this point, the timers are not started so its safe to unmask */
 	RX_IRQ_ENABLE();
 	TX_IRQ_ENABLE();
-	
-	return 0;
 }
 
 void swuart_free(void)
 {
-	rb_free(&port.rx_buf);
-	rb_free(&port.tx_buf);
 }

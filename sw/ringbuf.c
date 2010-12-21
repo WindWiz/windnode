@@ -3,25 +3,13 @@
 #include "ringbuf.h"
 #include "errno.h"
 
-int rb_init(struct ringbuf *rb, uint8_t capacity)
+void rb_init(struct ringbuf *rb, uint8_t *buf, uint8_t capacity)
 {
-	uint8_t *data = (uint8_t *) malloc(capacity);
-
-	if (!data)
-		return -ENOMEM;
-	
 	rb->size = 0;
-	rb->data = data;
+	rb->data = buf;
 	rb->capacity = capacity;
 	rb->head = &rb->data[0];
 	rb->tail = &rb->data[0];
-
-	return 0;
-}
-
-void rb_free(struct ringbuf *rb)
-{
-	free(rb->data);
 }
 
 uint8_t rb_is_full(struct ringbuf *rb)

@@ -47,6 +47,9 @@ struct uart_private {
 
 static struct uart_private port;
 
+static uint8_t tx_buffer[CONFIG_UART_TX_BUF];
+static uint8_t rx_buffer[CONFIG_UART_RX_BUF];
+
 #define TX_IRQ_DISABLE()	UCSR0B &= ~(_BV(UDRIE0))
 #define TX_IRQ_ENABLE()		UCSR0B |= _BV(UDRIE0)
 #define RX_IRQ_DISABLE()	UCSR0B &= ~(_BV(RXCIE0))
@@ -99,18 +102,11 @@ static int uart_putc(char c, FILE *stream)
 	return 0;
 }
 
-int uart_init(unsigned int ubrr, FILE *stream, uart_orun_handler_t orun)
+void uart_init(unsigned int ubrr, FILE *stream, uart_orun_handler_t orun)
 {
-	int ret;
-	
 	/* Setup context */
-	ret = rb_init(&port.rx, CONFIG_UART_RX_BUF);
-	if (ret)
-		return ret;
-
-	ret = rb_init(&port.tx, CONFIG_UART_TX_BUF);
-	if (ret)
-		return ret;
+	rb_init(&port.rx, &rx_buffer[0], CONFIG_UART_RX_BUF);
+	rb_init(&port.tx, &tx_buffer[0], CONFIG_UART_TX_BUF);
 
 	port.orun = orun;
 
@@ -126,13 +122,9 @@ int uart_init(unsigned int ubrr, FILE *stream, uart_orun_handler_t orun)
 	/* Enable */
 	UCSR0B = _BV(TXEN0) | _BV(RXEN0);
 	RX_IRQ_ENABLE();
-	
-	return 0;
 }
 
 void uart_free(void)
 {
-	rb_free(&port.tx);
-	rb_free(&port.rx);
 }
 

@@ -7,7 +7,7 @@
 
 typedef int (*uart_orun_handler_t)(void);
 
-int uart_init(unsigned int ubrr, FILE *stream, uart_orun_handler_t orun);
+void uart_init(unsigned int ubrr, FILE *stream, uart_orun_handler_t orun);
 void uart_free(void);
 
 #endif
