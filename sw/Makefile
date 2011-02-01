@@ -8,8 +8,8 @@ PROGPORT=/dev/avrusb0
 AVRDUDE=avrdude -p $(MCU) -c $(PROGTYPE) -P $(PROGPORT)
 ELFFUSE=./elf-fuse
 
-PROG=windwiz
-IHEX=windwiz.ihex
+PROG=windnode
+IHEX=windnode.ihex
 SRCS=main.c hwparam.c uart.c adc.c wind.c eeprom_cfg.c swuart.c ringbuf.c
 OBJS=$(SRCS:%.c=%.o)
 DEPS=$(SRCS:%.c=%.d)
