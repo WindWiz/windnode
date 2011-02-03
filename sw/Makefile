@@ -15,7 +15,7 @@ OBJS=$(SRCS:%.c=%.o)
 DEPS=$(SRCS:%.c=%.d)
 FUSES=$(PROG).fuses
 
-MCU=atmega168
+MCU=atmega328p
 
 CFLAGS  += -Wall -pedantic -Os -g -std=c99 -mmcu=$(MCU) -include config.h
 LDFLAGS += -mmcu=$(MCU)
