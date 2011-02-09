@@ -59,28 +59,17 @@
  * http://en.wikipedia.org/wiki/Asynchronous_serial
  */
 #include <stdio.h>
+#include <stdbool.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "ringbuf.h"
+#include "config.h"
 
-/* RX must be INT0 (PD2 on ATmega168) */
-#define RX      (PD2)
-#define RX_PORT (PORTD)
-#define RX_PIN  (PIND)
-#define RX_DDR  (DDRD)
-
-#define TX      (PD4)
-#define TX_PORT (PORTD)
-#define TX_DDR  (DDRD)
-
+#define STARTBIT (0)
+#define STOPBIT (1)
 #define DATAWIDTH (8)
 #define TX_PRESCALER (_BV(CS22))		/* 64 */
 #define RX_PRESCALER (_BV(CS01) | _BV(CS00))	/* 64 */
-
-#define RX_IRQ_DISABLE()	TIMSK0 &= ~(_BV(OCIE0A))
-#define RX_IRQ_ENABLE()		TIMSK0 |= _BV(OCIE0A)
-#define TX_IRQ_DISABLE()	TIMSK2 &= ~(_BV(OCIE2A))
-#define TX_IRQ_ENABLE()		TIMSK2 |= _BV(OCIE2A)
 
 enum {
 	UART_IDLE,
@@ -106,20 +95,84 @@ static struct swuart_private port;
 static uint8_t tx_buffer[CONFIG_SWUART_TX_BUF];
 static uint8_t rx_buffer[CONFIG_SWUART_RX_BUF];
 
-ISR(INT0_vect)
+static uint8_t rx_pin(void)
 {
-	/* Disable INT0 and start RX timer */
-	EIMSK &= ~(_BV(INT0));
-	
-	/* Setup to sample startbit in btime/2 */
-	port.rx_state = UART_STARTBIT;
-	TCNT0 = port.btime/2;
-	TCCR0B |= RX_PRESCALER;
+	return (CONFIG_SWUART_RX_PIN & _BV(CONFIG_SWUART_RX_BIT)) != 0;
+}
+
+static void rx_pinchange_irq(uint8_t en)
+{
+	if (en)
+		CONFIG_SWUART_RX_PCMSK |= _BV(CONFIG_SWUART_RX_PCBIT);
+	else {		
+		CONFIG_SWUART_RX_PCMSK &= ~(_BV(CONFIG_SWUART_RX_PCBIT));
+		PCIFR |= _BV(CONFIG_SWUART_RX_PCBIT);
+	}
+}
+
+static void rx_timer_irq(uint8_t en)
+{
+	if (en)
+		TIMSK0 |= _BV(OCIE0A);
+	else
+		TIMSK0 &= ~(_BV(OCIE0A));
+}
+
+static void rx_timer_toggle(uint8_t on)
+{
+	if (on)
+		TCCR0B |= RX_PRESCALER;
+	else {
+		TCCR0B &= ~RX_PRESCALER;
+		TIFR0 |= _BV(OCF0A);
+	}
+}
+
+static void tx_pin(uint8_t hi)
+{
+	if (hi)
+		CONFIG_SWUART_TX_PORT |= _BV(CONFIG_SWUART_TX_BIT);
+	else
+		CONFIG_SWUART_TX_PORT &= ~(_BV(CONFIG_SWUART_TX_BIT));
+}
+
+static void tx_timer_irq(uint8_t en)
+{
+	if (en)
+		TIMSK2 |= _BV(OCIE2A);
+	else
+		TIMSK2 &= ~(_BV(OCIE2A));
+}
+
+static void tx_timer_toggle(uint8_t on)
+{
+	if (on)
+		TCCR2B |= TX_PRESCALER;
+	else {
+		TCCR2B &= ~TX_PRESCALER;
+		TIFR2 |= _BV(OCF2A);
+	}
+}
+
+ISR(CONFIG_SWUART_RX_PCVECT)
+{
+	uint8_t rxbit = rx_pin();
+
+	/* Glitch-protection: Check for start bit on RX PIN */
+	if (rxbit == STARTBIT) {
+		/* Setup to sample startbit in btime/2 */
+		TCNT0 = port.btime/2;
+		rx_timer_toggle(true);
+
+		port.rx_state = UART_STARTBIT;
+		rx_pinchange_irq(false);
+	} else
+		printf("G SENSE\r\n");
 }
 
 ISR(TIMER0_COMPA_vect) 
 {
-	uint8_t rxbit = RX_PIN & _BV(RX);
+	uint8_t rxbit = rx_pin();
 
 	switch (port.rx_state) {
 		case UART_IDLE:
@@ -128,16 +181,15 @@ ISR(TIMER0_COMPA_vect)
 
 		case UART_STARTBIT:
 			/* Check for valid startbit */
-			if (!rxbit)	{
+			if (rxbit == STARTBIT)	{
 				port.rx_bitsleft = DATAWIDTH;
 				port.rx_state = UART_DATA;
 			} else {
 				/* Glitch-protection: return to idle if startbit has vanished */
 				port.rx_state = UART_IDLE;
-				TCCR0B &= ~RX_PRESCALER;
-				TIFR0 |= _BV(OCF0A);
-				EIFR  |= _BV(INTF0);
-				EIMSK |= _BV(INT0);
+				rx_timer_toggle(false);
+				printf("G START!\r\n");
+				rx_pinchange_irq(true);
 			}
 			break;
 
@@ -154,19 +206,16 @@ ISR(TIMER0_COMPA_vect)
 
 		case UART_STOPBIT:
 			/* Check for valid stopbit */
-			if (rxbit) {
+			if (rxbit == STOPBIT) {
 				if (!rb_is_full(&port.rx_buf))
 					rb_insert_tail(&port.rx_buf, port.rx_sample);
-			} else {
-				/* XXX: Data is most likely corrupt. Signal someone? */
-			}
+			} else
+				printf("G STOP!\r\n");
 
 			/* Disable timer and re-enable startbit detector */
 			port.rx_state = UART_IDLE;
-			TCCR0B &= ~RX_PRESCALER;
-			TIFR0 |= _BV(OCF0A);
-			EIFR  |= _BV(INTF0);
-			EIMSK |= _BV(INT0);
+			rx_timer_toggle(false);
+			rx_pinchange_irq(true);
 			break;			
 	}
 }
@@ -179,15 +228,12 @@ ISR(TIMER2_COMPA_vect)
 			break;
 		
 		case UART_STARTBIT:
-			TX_PORT &= ~(_BV(TX));
+			tx_pin(STARTBIT);
 			port.tx_state = UART_DATA;
 			break;
 
 		case UART_DATA:
-			if (port.tx_sample & 0x1)
-				TX_PORT |= _BV(TX);
-			else
-				TX_PORT &= ~(_BV(TX));
+			tx_pin(port.tx_sample & 0x1);
 
 			port.tx_sample = port.tx_sample >> 1;
 			port.tx_bitsleft--;
@@ -197,7 +243,7 @@ ISR(TIMER2_COMPA_vect)
 			break;
 
 		case UART_STOPBIT:
-			TX_PORT |= _BV(TX);
+			tx_pin(STOPBIT);
 
 			/* Schedule work for next cycle, if available */
 			if (!rb_is_empty(&port.tx_buf))	{
@@ -205,8 +251,7 @@ ISR(TIMER2_COMPA_vect)
 				port.tx_sample = rb_remove_head(&port.tx_buf);
 				port.tx_state = UART_STARTBIT;
 			} else {
-				TCCR2B &= ~TX_PRESCALER;
-				TIFR2 |= _BV(OCF2A);
+				tx_timer_toggle(false);
 				port.tx_state = UART_IDLE;
 			}
 			break;
@@ -217,12 +262,12 @@ static int swuart_getc(FILE *stream)
 {
 	int ret = 0;
 
-	RX_IRQ_DISABLE();
+	rx_timer_irq(false);
 	if (rb_is_empty(&port.rx_buf))
 		ret = _FDEV_EOF;
 	else
 		ret = rb_remove_head(&port.rx_buf);
-	RX_IRQ_ENABLE();
+	rx_timer_irq(true);
 
 	return ret;
 }
@@ -237,15 +282,15 @@ static int swuart_putc(char c, FILE *stream)
 			port.tx_sample = c;
 			port.tx_state = UART_STARTBIT;
 			TCNT2 = 0;			
-			TCCR2B |= TX_PRESCALER;
+			tx_timer_toggle(true);
 			queued = 1;
 		} else {
-			TX_IRQ_DISABLE();
+			tx_timer_irq(false);
 			if (!rb_is_full(&port.tx_buf)) {
 				rb_insert_tail(&port.tx_buf, c);
 				queued = 1;
 			}
-			TX_IRQ_ENABLE();
+			tx_timer_irq(true);
 		}
 	} while (!queued);
 
@@ -261,14 +306,10 @@ void swuart_init(unsigned int btime, FILE *stream)
 	port.rx_state = UART_IDLE;
 	port.btime = btime;
 
-	RX_DDR  &= ~(_BV(RX));
-	RX_PORT |= _BV(RX);		
-	TX_DDR  |= _BV(TX);
-	TX_PORT |= _BV(TX); 
-
-	/* Falling edge triggers RX sampling */
-	EICRA |= _BV(ISC01); 
-	EIMSK |= _BV(INT0);
+	CONFIG_SWUART_RX_DIR  &= ~(_BV(CONFIG_SWUART_RX_BIT));
+	CONFIG_SWUART_RX_PORT |= _BV(CONFIG_SWUART_RX_BIT);	/* Pull-up */
+	CONFIG_SWUART_TX_DIR  |= _BV(CONFIG_SWUART_TX_BIT);
+	tx_pin(STOPBIT);
 
 	/* Baudrate */
 	OCR0A = btime;
@@ -281,8 +322,12 @@ void swuart_init(unsigned int btime, FILE *stream)
 	fdev_setup_stream(stream, swuart_putc, swuart_getc, _FDEV_SETUP_RW);
 
 	/* At this point, the timers are not started so its safe to unmask */
-	RX_IRQ_ENABLE();
-	TX_IRQ_ENABLE();
+	rx_timer_irq(true);
+	tx_timer_irq(true);
+
+	/* Trigger interrupt on RX pin changes */
+	PCICR |= _BV(CONFIG_SWUART_RX_PCCTRL); 
+	rx_pinchange_irq(true);
 }
 
 void swuart_free(void)
