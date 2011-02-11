@@ -23,7 +23,7 @@
 
 static volatile uint16_t revs;
 
-ISR(PCINT0_vect)
+ISR(PCINT1_vect)
 {
 	revs++;
 }
