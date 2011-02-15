@@ -19,17 +19,20 @@
 #define _CONFIG_H_
 
 #define F_CPU (8000000UL)
-#define CONFIG_SWUART_RX_BUF (20)
-#define CONFIG_SWUART_TX_BUF (20)
-#define CONFIG_UART_RX_BUF (20)
-#define CONFIG_UART_TX_BUF (20)
 #define CONFIG_DEBUG_BAUDRATE (2400)
 #define CONFIG_GSM_BAUDRATE (9600)
 
 /* Commandline interface */
 #define CONFIG_CMDLINE_SEPARATOR ";"
 
+/* UART */
+#define CONFIG_UART_RX_BUF (20)
+#define CONFIG_UART_TX_BUF (20)
+
 /* Software UART */
+#define CONFIG_SWUART_RX_BUF (20)
+#define CONFIG_SWUART_TX_BUF (20)
+
 #define CONFIG_SWUART_RX_BIT	(PB5)
 #define CONFIG_SWUART_RX_PORT	(PORTB)
 #define CONFIG_SWUART_RX_PIN	(PINB)
