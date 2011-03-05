@@ -23,10 +23,12 @@ STRIP=avr-strip
 PROGTYPE=stk500v2
 PROGPORT=/dev/avrusb0
 AVRDUDE=avrdude -p $(MCU) -c $(PROGTYPE) -P $(PROGPORT)
+MAGBOOT=magboot.py $(PROGPORT) $(MCU) -i
 ELFFUSE=./elf-fuse
 
 PROG=windnode
 IHEX=windnode.ihex
+BIN=windnode.bin
 SRCS=main.c hwparam.c uart.c adc.c wind.c eeprom_cfg.c swuart.c ringbuf.c command.c
 OBJS=$(SRCS:%.c=%.o)
 DEPS=$(SRCS:%.c=%.d)
@@ -47,6 +49,10 @@ $(PROG): $(OBJS)
 $(IHEX): $(PROG)
 	$(OBJCOPY) -R .fuse -R .eeprom -R .lock -R .signature -S -O ihex $^ $@ 
 
+# Generate raw binaries from ELF, strips all sections except .text and .data
+$(BIN): $(PROG)
+	$(OBJCOPY) -j .data -j .text -S -O binary $^ $@
+
 # Extract fuse bytes from ELF binary (firmware needs to use the AVR libc FUSE API)
 %.fuses: $(PROG)
 	$(ELFFUSE) $* > $@
@@ -58,6 +64,11 @@ $(IHEX): $(PROG)
 .PHONY: flash	
 flash: $(IHEX)
 	$(AVRDUDE) -e -U flash:w:$(IHEX)
+
+# Flash firmware using magboot
+.PHONY: mflash
+mflash: $(BIN)
+	$(MAGBOOT) -a 0x0 -w $(BIN) -r
 
 # Downloads current fuse bytes and displays them on stdout
 .PHONY: fusedump

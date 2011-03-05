@@ -1,5 +1,6 @@
 *.o
 *.fuses
 *.ihex
+*.bin
 *.d
 windnode
