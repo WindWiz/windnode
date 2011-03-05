@@ -16,28 +16,132 @@
  */
 
 #include <avr/io.h>
+#include <stdio.h>
+#include <stdbool.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include <string.h>
 #include <stdlib.h>
 
+#include "command.h"
+#include "errno.h"
 #include "swuart.h"
-#include "uart.h"
+#include "gsm.h"
+#include "time.h"
 
-static FILE debug;
-static FILE gsm;
+static FILE f_debug;
+
+static int cmd_gsmpwr(char *arg, char *buf, size_t buflen)
+{
+	int ret;
+	if (buflen < 2)
+		return -ENOMEM;
+
+	if (!memcmp(arg, "ON", 2)) {
+		strcat(buf, "UP");
+		gsm_power_up();
+	} else {
+		strcat(buf, "DN");
+		gsm_power_down();
+	}
+
+	return 2;
+}
+
+static int cmd_gsmrst(char *arg, char *buf, size_t buflen)
+{
+	if (buflen < 2)
+		return -ENOMEM;
+
+	gsm_reset();
+	strcat(buf, "OK");
+	return 2;
+}
+
+static int cmd_gsmat(char *arg, char *buf, size_t buflen)
+{
+	int read;
+
+	gsm_at(arg);
+	read = gsm_read_response(buf, buflen, 1*HZ);
+	if (read < 0) {
+		sprintf(buf, "ERROR %d", read);
+		return 7; /* "approximation" */
+	} else {
+		return read ;
+	}
+}
+
+static int cmd_gsmcfg(char *arg, char *buf, size_t buflen)
+{
+	int ret;
+
+	gsm_at("ATE0");
+	if (gsm_check_response("ATE0\r\n\r\nOK\r\n", 1*HZ)) {
+		strcat(buf, "ATE FAIL");
+		return 8;
+	}
+
+	strcat(buf, "OK");
+	return 2;
+}
+
+/* Sorted by priority */
+static struct command *commandlist[] = {
+	CREATE_COMMAND("GSMAT", cmd_gsmat),
+	CREATE_COMMAND("GSMPWR", cmd_gsmpwr),
+	CREATE_COMMAND("GSMRST", cmd_gsmrst),
+	CREATE_COMMAND("GSMCFG", cmd_gsmcfg),
+	COMMANDLIST_END,
+};
+
+static void cmdline_loop(void)
+{
+	char in[200], out[200];
+	size_t inlen;
+	bool in_cmd;
+
+	while (1) {
+		in_cmd = true;
+		inlen = 0;
+		out[0] = '\0';
+		in[0] = '\0';
+		printf("> ");
+
+		while (in_cmd) {
+			int c = fgetc(stdin);
+			if (c != EOF) {
+				if (c == '\n' || c == '\r' || inlen == sizeof(in) - 1) {
+					in[inlen] = '\0';
+					cmd_exec(commandlist, in, out, sizeof(out));
+
+					printf("%s (%d bytes)\n", out, strlen(out));
+					in_cmd = false;
+				} else
+					in[inlen++] = c;
+			}
+		}
+	}
+}
 
 int main(void)
 {
-	swuart_init(SWUART_BAUD(CONFIG_DEBUG_BAUDRATE, F_CPU), &debug);
-	uart_init(UART_BAUD(CONFIG_GSM_BAUDRATE, F_CPU), &gsm, NULL);
+	swuart_init(SWUART_BAUD(CONFIG_DEBUG_BAUDRATE, F_CPU), &f_debug);
 
-	stdout = &debug;
-	stdin = &debug;
+	stdout = &f_debug;
+	stdin = &f_debug;
+
+	gsm_init();
+	time_init();
 
 	sei();
 
-	while (1) {
+	printf("WindNode initialized.\n");
 
+	cmdline_loop();
+
+	while (1) {
+		/* SLEEP */
 	}
 
 	return 0;

@@ -22,6 +22,8 @@ enum {
 	ENOMEM = 1,
 	EIO,
 	ENOENT,
+	ETIMEOUT,
+	EINVAL,
 };
 
 #endif
