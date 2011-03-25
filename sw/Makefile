@@ -23,7 +23,7 @@ STRIP=avr-strip
 PROGTYPE=stk500v2
 PROGPORT=/dev/avrusb0
 AVRDUDE=avrdude -p $(MCU) -c $(PROGTYPE) -P $(PROGPORT)
-MAGBOOT=magboot.py $(PROGPORT) $(MCU) -i
+MAGBOOT=magboot.py $(PROGPORT) $(MCU) -z -i
 ELFFUSE=./elf-fuse
 
 PROG=windnode
