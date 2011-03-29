@@ -94,10 +94,10 @@ static int uart_getc(FILE *stream)
 	int ret = 0;
 
 	RX_IRQ_DISABLE();
-		if (rb_is_empty(&port.rx))
-			ret = _FDEV_EOF;
-		else
-			ret = rb_remove_head(&port.rx);
+	if (rb_is_empty(&port.rx))
+		ret = _FDEV_EOF;
+	else
+		ret = rb_remove_head(&port.rx);
 	RX_IRQ_ENABLE();
 
 	return ret;
