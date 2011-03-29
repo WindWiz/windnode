@@ -1,0 +1,34 @@
+UART - An AVR USART implementation
+--------------------------------------------------------------------------------
+Stdio interface to the ATmega hardware UART. The implementation is interrupt
+-driven and uses ringbuffers for each direction and allows for full duplex
+communication.
+
+Usage:
+#include <stdio.h>
+
+...
+FILE uart;
+uart_init(UART_BAUD(2400, F_CPU), &uart, NULL);
+
+You may also (optionally) register an overrun handler which will be called
+whenever an receiver overrun occurs. This can be used as a warning for the
+consumer that,
+1) producer is too fast (throttle)
+2) data consumption is too slow
+3) data is being lost
+
+uart_init(UART_BAD(2400, F_CPU), &uart, orun_handler);
+
+...
+
+- Use fputc(), fprintf() etc to write.
+- Use fgetc(), fread() etc to read.
+
+You may also assign the UART stream to become your stdin/stdout:
+stdin = &uart;
+stdout = &uart;
+
+After this all standard functions will use the UART for I/O, such as:
+printf, scanf etc.
+
