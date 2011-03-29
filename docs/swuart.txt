@@ -1,0 +1,44 @@
+SWUART - A software USART implementation.
+--------------------------------------------------------------------------------
+Stdio interface to a software 8N1 UART port. The implementation is full 
+duplex and driven by the two 8-bit timers (Timer #0 & #2) found on the 
+ATmega168.
+It can be used to add additional USART ports to your MCU at the cost of
+CPU cycles.
+
+Hardware setup:
+- Transmitter pin is PD1
+- Receiver pin is PD0
+ 
+The TX pin can be changed freely, however the RX pin is bound to either INT0
+or INT1 because it relies on external interrupts to detect incoming data.
+This implemention assumes incoming data arrives on INT0/PD0.
+
+NOTE: As Software USART is quite heavy on the CPU, this port is limited to
+2400 baud. The implementation has been optimized for running at 1 MHz CPU
+frequency. 
+
+Usage:
+#include <stdio.h>
+#include "swuart.h"
+
+...
+ 
+FILE swuart;
+swuart_init(SWUART_BAUD(2400, F_CPU), &swuart);
+
+...
+
+- Use fputc(), fprintf() etc to write.
+- Use fgetc(), fread() etc to read.
+
+You may also assign the UART stream to become your stdin/stdout:
+stdin = &swuart;
+stdout = &swuart;
+ 
+After this all standard functions will use the UART for I/O, such as:
+printf, scanf etc.
+
+For more information on the asynchronous serial protocol, please refer to:
+http://en.wikipedia.org/wiki/Asynchronous_serial
+
