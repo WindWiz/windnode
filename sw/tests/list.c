@@ -116,6 +116,50 @@ static bool test_del(void)
 	}
 }
 
+static bool test_safe_del(void)
+{
+	struct list_head list;
+	struct list_head *cur;
+	struct list_head *tmp;
+	struct dummy d[3];
+	struct dummy *singular;
+	int i;
+
+	list_init(&list);
+	list_add_tail(&list, &d[0].list);
+	list_add_tail(&list, &d[1].list);
+	list_add_tail(&list, &d[2].list);
+
+	i = 0;
+	list_for_each_safe(cur, tmp, &list) {
+		i++;
+		if (i != 2)
+			list_del(cur);
+	}
+
+	if (i != 3) {
+		printf("%s: unexpected number of items in list (%d)\n", __func__, i);
+		return EXIT_FAILURE;
+	}
+
+	i = 0;
+	list_for_each_safe(cur, tmp, &list) {
+		i++;
+	}
+
+	if (i != 1) {
+		printf("%s: unexpected number of items in list (%d)\n", __func__, i);
+		return EXIT_FAILURE;
+	}
+
+	singular = list_first_entry(&list, struct dummy, list);
+	if (singular != &d[1]) {
+		printf("%s: unexpected item after del in safe loop\n", __func__);
+		return EXIT_FAILURE;
+	} else
+		return EXIT_SUCCESS;
+}
+
 int main(void)
 {	
 	if (!test_add_tail(100))
@@ -128,6 +172,9 @@ int main(void)
 		return EXIT_FAILURE;
 
 	if (!test_del())
+		return EXIT_FAILURE;
+
+	if (!test_safe_del())
 		return EXIT_FAILURE;
 
 	return EXIT_SUCCESS;
