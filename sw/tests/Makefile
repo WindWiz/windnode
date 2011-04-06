@@ -23,16 +23,17 @@ WINDNODE=..
 
 CFLAGS += -Wall -g3 -pedantic -std=c99 -I $(WINDNODE) -include config.h
 
-TESTS=cmdline
+list_OBJS=list.o
+list: $(list_OBJS)
+TEST_list: list
+	./list
 
 cmdline_OBJS=cmdline.o $(WINDNODE)/command.o
-
 cmdline: $(cmdline_OBJS)
-
 TEST_cmdline: cmdline
 	./cmdline	
 
-all: 
+all: TEST_list TEST_cmdline
 
 clean:
 	rm -rf $(cmdline_OBJS) cmdline
