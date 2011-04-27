@@ -4,6 +4,7 @@
 /* Linux kernel doubly linked list implementation */
 
 #include <stdint.h>
+#include "target.h"
 
 struct list_head {
 	struct list_head *next;
@@ -60,7 +61,7 @@ static inline uint8_t list_empty(struct list_head *head)
 		pos = n, n = pos->next)
 
 #define list_entry(ptr, type, member) \
-	((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
+	container_of(ptr, type, member)
 
 #define list_first_entry(ptr, type, member) \
 	list_entry((ptr)->next, type, member)
