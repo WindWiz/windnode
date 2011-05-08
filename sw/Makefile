@@ -29,7 +29,8 @@ ELFFUSE=./elf-fuse
 PROG=windnode
 IHEX=windnode.ihex
 BIN=windnode.bin
-SRCS=main.c hwparam.c uart.c adc.c wind.c eeprom_cfg.c swuart.c ringbuf.c command.c
+SRCS=main.c hwparam.c uart.c adc.c wind.c eeprom_cfg.c swuart.c ringbuf.c \
+	command.c time.c
 OBJS=$(SRCS:%.c=%.o)
 DEPS=$(SRCS:%.c=%.d)
 FUSES=$(PROG).fuses
