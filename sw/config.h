@@ -22,6 +22,9 @@
 #define CONFIG_DEBUG_BAUDRATE (2400)
 #define CONFIG_GSM_BAUDRATE (9600)
 
+/* System timer granularity (1, 10, 100 or 1000) */
+#define CONFIG_HZ	(10)
+
 /* Commandline interface */
 #define CONFIG_CMDLINE_SEPARATOR ";"
 
