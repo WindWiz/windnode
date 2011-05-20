@@ -25,7 +25,8 @@ volatile uint32_t jiffies;
 
 /* XXX: Calculate depending on F_CPU and HZ, at the moment this is only
    accurate for 16 MHz F_CPU and HZ > 1 */
-#define TIMER_PRESCALER (_BV(CS11) | _BV(CS10)) /* 64 */
+#define TIMER_PRESCALER_REG (_BV(CS11) | _BV(CS10)) /* 64 */
+#define TIMER_PRESCALER (64)
 
 SIGNAL(TIMER1_COMPA_vect)
 {
@@ -53,7 +54,7 @@ void time_init(void)
 	TIMSK1 |= _BV(OCIE1A);
 
 	/* Start timer */
-	TCCR1B |= TIMER_PRESCALER;
+	TCCR1B |= TIMER_PRESCALER_REG;
 }
 
 
