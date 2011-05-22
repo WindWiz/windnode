@@ -18,7 +18,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define F_CPU (8000000UL)
+#define F_CPU (16000000UL)
 #define CONFIG_DEBUG_BAUDRATE (2400)
 #define CONFIG_GSM_BAUDRATE (9600)
 
