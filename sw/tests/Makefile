@@ -23,6 +23,11 @@ WINDNODE=..
 
 CFLAGS += -Wall -g3 -pedantic -std=c99 -I $(WINDNODE) -include config.h
 
+timers_OBJS=timers.o $(WINDNODE)/timer_queue.o
+timers: $(timers_OBJS)
+TEST_timers: timers
+	./timers
+
 list_OBJS=list.o
 list: $(list_OBJS)
 TEST_list: list
@@ -36,4 +41,4 @@ TEST_cmdline: cmdline
 all: TEST_list TEST_cmdline
 
 clean:
-	rm -rf $(cmdline_OBJS) cmdline
+	rm -rf $(cmdline_OBJS) cmdline $(list_OBJS) list $(timers_OBJS) timers
