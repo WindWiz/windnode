@@ -11,6 +11,12 @@ struct list_head {
 	struct list_head *prev;
 };
 
+#define DECLARE_LIST(name) \
+	struct list_head name = __LIST_INITIALIZER(&name)
+
+#define __LIST_INITIALIZER(lst) \
+	{ .next = (lst), .prev = (lst) }
+
 static inline void __list_add(struct list_head *n, struct list_head *prev,
 	struct list_head *next)
 {
