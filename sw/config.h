@@ -20,13 +20,28 @@
 
 #define F_CPU (16000000UL)
 #define CONFIG_DEBUG_BAUDRATE (2400)
-#define CONFIG_GSM_BAUDRATE (9600)
+#define CONFIG_GSM_BAUDRATE (38400)
 
 /* System timer granularity (1, 10, 100 or 1000) */
 #define CONFIG_HZ	(10)
 
 /* Commandline interface */
 #define CONFIG_CMDLINE_SEPARATOR ";"
+
+/* DTMF ENABLE*/
+#define CONFIG_DTMF_EN_PIN     (PD2)
+#define CONFIG_DTMF_EN_DIR	   (DDRD)
+#define CONFIG_DTMF_EN_PORT	   (PORTD)
+
+/* GSM ON/OFF */
+#define CONFIG_GSM_EN_PIN      (PD5)
+#define CONFIG_GSM_EN_DIR      (DDRD)
+#define CONFIG_GSM_EN_PORT     (PORTD)
+
+/* GSM RESET */
+#define CONFIG_GSM_RST_PIN     (PD4)
+#define CONFIG_GSM_RST_DIR     (DDRD)
+#define CONFIG_GSM_RST_PORT    (PORTD)
 
 /* UART */
 #define CONFIG_UART_RX_BUF (20)
