@@ -122,8 +122,7 @@ ISR(CONFIG_SWUART_RX_PCVECT)
 
 		port.rx_state = UART_STARTBIT;
 		rx_pinchange_irq(false);
-	} else
-		printf("G SENSE\r\n");
+	}
 }
 
 ISR(TIMER0_COMPA_vect) 
@@ -144,7 +143,6 @@ ISR(TIMER0_COMPA_vect)
 				/* Glitch-protection: return to idle if startbit has vanished */
 				port.rx_state = UART_IDLE;
 				rx_timer_toggle(false);
-				printf("G START!\r\n");
 				rx_pinchange_irq(true);
 			}
 			break;
@@ -165,8 +163,7 @@ ISR(TIMER0_COMPA_vect)
 			if (rxbit == STOPBIT) {
 				if (!rb_is_full(&port.rx_buf))
 					rb_insert_tail(&port.rx_buf, port.rx_sample);
-			} else
-				printf("G STOP!\r\n");
+			}
 
 			/* Disable timer and re-enable startbit detector */
 			port.rx_state = UART_IDLE;
