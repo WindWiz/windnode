@@ -25,6 +25,8 @@
 #include "uart.h"
 #include "time.h"
 
+#define D(x)
+
 static FILE f_gsm;
 
 static void gsm_power(uint16_t delay)
@@ -107,20 +109,26 @@ int gsm_read_response(char *buf, size_t buf_len, uint8_t timeout)
 	int c;
 
 	gsm_discard_response();
+	D(printf("Response: "));
 	do {
 		c = gsm_getc(timeout);
-		if (c < 0)
+		if (c < 0) {
+			D(printf("Timeout!\n"));
 			return -ETIMEOUT;
+		}
 
 		buf[len++] = (uint8_t) c;
 
+		D(printf("0x%x ", (uint8_t) c));
 		if (len >= 2 && buf[len-1] == '\n' && buf[len-2] == '\r') {
+			D(printf("\n"));
 			buf[len-2] = '\0'; /* \r */
 			buf[len-1] = '\0'; /* \n */
 			return len-2;
 		}
 	} while (len < buf_len);
 
+	D(printf("Mismatch!\n"));
 	buf[0] = '\0';
 	gsm_discard_response();
 
@@ -154,6 +162,8 @@ int gsm_at(char *cmd)
 {
 	fputs(cmd, &f_gsm);
 	fputs("\r\n", &f_gsm);
+
+	D(printf("Write: %s\n", cmd));
 	return 0;
 }
 
