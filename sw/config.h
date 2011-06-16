@@ -25,6 +25,11 @@
 /* System timer granularity (1, 10, 100 or 1000) */
 #define CONFIG_HZ	(10)
 
+/* Debug LED */
+#define CONFIG_LED_PORT (PORTB)
+#define CONFIG_LED_DIR  (DDRB)
+#define CONFIG_LED_PIN  (PB5)
+
 /* Commandline interface */
 #define CONFIG_CMDLINE_SEPARATOR ";"
 
