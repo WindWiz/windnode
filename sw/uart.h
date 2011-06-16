@@ -18,7 +18,7 @@
 #ifndef _UART_H_
 #define _UART_H_
 
-#define UART_BAUD(baud, f) ((f)/((baud)*16l)-1)
+#define UART_BAUD(baud, f) ((f)/((baud)*16l))
 
 #include <stdio.h>
 
