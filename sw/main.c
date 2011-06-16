@@ -142,6 +142,9 @@ static void cmdline_loop(void)
 
 int main(void)
 {
+	uint8_t cause = MCUSR;
+	MCUSR = 0;
+
 	swuart_init(SWUART_BAUD(CONFIG_DEBUG_BAUDRATE, F_CPU), &f_debug);
 
 	stdout = &f_debug;
@@ -152,8 +155,8 @@ int main(void)
 
 	sei();
 
-	printf("WindNode initialized, startup stack %d bytes\n",
-		stackmon_maxdepth());
+	printf("WindNode initialized, reset cause 0x%x, startup stack %d bytes\n",
+		cause, stackmon_maxdepth());
 
 	cmdline_loop();
 
