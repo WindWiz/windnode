@@ -25,7 +25,6 @@ static int cmd_error(int err, char *buf, size_t buflen)
 	if (buflen == 0)
 		return 0;
 
-	buflen -= CMD_SEP_LEN;
 	switch (err) {
 		case -ENOENT:
 			msg = "Command not found";
@@ -40,10 +39,9 @@ static int cmd_error(int err, char *buf, size_t buflen)
 	}
 
 	len = buflen < strlen(msg) ? buflen : strlen(msg);
+	strncpy(buf, msg, len);
 
-	strncat(buf, msg, len);
-	strcat(buf, CONFIG_CMDLINE_SEPARATOR);
-	return len + CMD_SEP_LEN;
+	return len;
 }
 
 static int __cmd_exec(struct command *cmdlist[], char *cmd, char *buf, 
@@ -81,8 +79,8 @@ static int __cmd_exec(struct command *cmdlist[], char *cmd, char *buf,
 			arg = ltrim(arg);
 			written = acmd->exec(arg, buf, buflen - CMD_SEP_LEN); 
 			if (written > 0) {
-				strcat(buf, CONFIG_CMDLINE_SEPARATOR);
-				written++;
+				strcpy(&buf[written], CONFIG_CMDLINE_SEPARATOR);
+				written += CMD_SEP_LEN;
 			}
 
 			return written;
@@ -100,11 +98,15 @@ void cmd_exec(struct command *cmdlist[], char *in, char *buf, size_t buflen)
 
 	buflen--; 	/* Reserve NULL terminator */
 
+	buf[0] = '\0'; /* Reset output */
 	token = strtok(in, CONFIG_CMDLINE_SEPARATOR);
 	while (token) {
 		written = __cmd_exec(cmdlist, token, bufpos, buflen);
-		if (written < 0)
-			written = cmd_error(written, bufpos, buflen);
+		if (written < 0) {
+			written = cmd_error(written, bufpos, buflen - CMD_SEP_LEN);
+			strcpy(&bufpos[written], CONFIG_CMDLINE_SEPARATOR);
+			written += CMD_SEP_LEN;
+		}
 
 		bufpos += written;
 		buflen -= written;
