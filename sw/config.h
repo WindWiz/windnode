@@ -48,9 +48,9 @@
 #define CONFIG_GSM_RST_DIR     (DDRD)
 #define CONFIG_GSM_RST_PORT    (PORTD)
 
-/* UART */
-#define CONFIG_UART_RX_BUF (20)
-#define CONFIG_UART_TX_BUF (20)
+/* GSM UART */
+#define CONFIG_GSM_RX_BUF (20)
+#define CONFIG_GSM_TX_BUF (20)
 
 /* Software UART */
 #define CONFIG_SWUART_RX_BUF (20)
