@@ -26,11 +26,13 @@
 #include "command.h"
 #include "errno.h"
 #include "swuart.h"
-#include "gsm.h"
+#include "telit.h"
+#include "at.h"
 #include "time.h"
 #include "stackmon.h"
 
 static FILE f_debug;
+static FILE f_gsm;
 
 static uint8_t dbg_rx[CONFIG_DEBUG_RX_BUF];
 static uint8_t dbg_tx[CONFIG_DEBUG_TX_BUF];
@@ -51,16 +53,15 @@ static int cmd_stackdepth(char *arg, char *buf, size_t buflen)
 
 static int cmd_gsmpwr(char *arg, char *buf, size_t buflen)
 {
-	int ret;
 	if (buflen < 2)
 		return -ENOMEM;
 
 	if (!memcmp(arg, "ON", 2)) {
 		strcat(buf, "UP");
-		gsm_power_up();
+		telit_power_up();
 	} else {
 		strcat(buf, "DN");
-		gsm_power_down();
+		telit_power_down();
 	}
 
 	return 2;
@@ -71,46 +72,46 @@ static int cmd_gsmrst(char *arg, char *buf, size_t buflen)
 	if (buflen < 2)
 		return -ENOMEM;
 
-	gsm_reset();
+	telit_reset();
 	strcat(buf, "OK");
 	return 2;
 }
 
 static int cmd_gsmat(char *arg, char *buf, size_t buflen)
 {
-	int read;
-
-	gsm_at(arg);
-	read = gsm_read_response(buf, buflen, 1*HZ);
-	if (read < 0) {
-		sprintf(buf, "ERROR %d", read);
-		return 7; /* "approximation" */
-	} else {
-		return read ;
-	}
-}
-
-static int cmd_gsmcfg(char *arg, char *buf, size_t buflen)
-{
-	int ret;
-
-	gsm_at("ATE0");
-	if (gsm_check_response("ATE0\r\n\r\nOK\r\n", 1*HZ)) {
-		strcat(buf, "ATE FAIL");
-		return 8;
+	if (at_cmd(&f_gsm, arg)) {
+		strcat(buf, "FAIL");
+		return 4;
 	}
 
 	strcat(buf, "OK");
 	return 2;
 }
 
+static int cmd_gsmresp(char *arg, char *buf, size_t buflen)
+{
+	return at_response(&f_gsm, buf, buflen, 2*HZ);
+}
+
+static int cmd_delay(char *arg, char *buf, size_t buflen)
+{
+	uint8_t timeout = atoi(arg);
+	uint32_t t0 = time_jiffies();
+
+	while (time_jiffies() - t0 < timeout*HZ);
+
+	strcat(buf, "OK");
+	return 2;	
+}
+
 /* Sorted by priority */
 static struct command *commandlist[] = {
 	CREATE_COMMAND("STACK", cmd_stackdepth),
+	CREATE_COMMAND("DELAY", cmd_delay),
 	CREATE_COMMAND("GSMAT", cmd_gsmat),
 	CREATE_COMMAND("GSMPWR", cmd_gsmpwr),
 	CREATE_COMMAND("GSMRST", cmd_gsmrst),
-	CREATE_COMMAND("GSMCFG", cmd_gsmcfg),
+	CREATE_COMMAND("GSMRESP", cmd_gsmresp),
 	COMMANDLIST_END,
 };
 
@@ -134,6 +135,7 @@ static void cmdline_loop(void)
 					in[inlen] = '\0';
 					cmd_exec(commandlist, in, out, sizeof(out));
 
+					
 					printf("%s (%d bytes)\n", out, strlen(out));
 					in_cmd = false;
 				} else
@@ -154,7 +156,7 @@ int main(void)
 	stdout = &f_debug;
 	stdin = &f_debug;
 
-	gsm_init();
+	telit_init(&f_gsm);
 	time_init();
 
 	sei();

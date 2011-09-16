@@ -23,10 +23,18 @@ WINDNODE=..
 
 CFLAGS += -Wall -g3 -pedantic -std=c99 -I $(WINDNODE) -include config.h
 
+.PHONY: all
+all: TEST_list TEST_cmdline TEST_gsm
+
 timers_OBJS=timers.o $(WINDNODE)/timer_queue.o
 timers: $(timers_OBJS)
 TEST_timers: timers
 	./timers
+
+gsm_OBJS=gsm.o time.o $(WINDNODE)/at.o
+gsm: $(gsm_OBJS)
+TEST_gsm: gsm
+	./gsm
 
 list_OBJS=list.o
 list: $(list_OBJS)
@@ -38,7 +46,5 @@ cmdline: $(cmdline_OBJS)
 TEST_cmdline: cmdline
 	./cmdline	
 
-all: TEST_list TEST_cmdline
-
 clean:
-	rm -rf $(cmdline_OBJS) cmdline $(list_OBJS) list $(timers_OBJS) timers
+	rm -rf $(cmdline_OBJS) cmdline $(list_OBJS) list $(timers_OBJS) timers $(gsm_OBJS) gsm

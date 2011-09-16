@@ -15,17 +15,14 @@
  * along with Windnode.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _ERRNO_H_
-#define _ERRNO_H_
+#ifndef _TELIT_H_
 
-enum {
-	ENOMEM = 1,
-	EIO,
-	ENOENT,
-	ETIMEOUT,
-	EINVAL,
-	EURUN,
-	EFAULT,
-};
+#include <stdio.h>
+
+int telit_init(FILE *stream);
+void telit_power_up();
+void telit_power_down();
+void telit_reset();
 
 #endif
+

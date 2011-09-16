@@ -14,18 +14,27 @@
  * You should have received a copy of the GNU General Public License
  * along with Windnode.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <stdint.h>
+#include <stdlib.h>
+#include <sys/time.h>
+#include "time.h"
 
-#ifndef _ERRNO_H_
-#define _ERRNO_H_
+volatile uint32_t jiffies = 0; /* Don't support direct read-out on host */
 
-enum {
-	ENOMEM = 1,
-	EIO,
-	ENOENT,
-	ETIMEOUT,
-	EINVAL,
-	EURUN,
-	EFAULT,
-};
+uint32_t time_jiffies(void)
+{
+	struct timeval t;
 
-#endif
+	if (gettimeofday(&t, NULL)) {
+		perror("time_jiffies");
+		return ~0;
+	}
+	
+	return (t.tv_sec * HZ) + msecs_to_jiffies((t.tv_usec / 1000));
+}
+
+void time_init(void)
+{
+	/* NO-OP */
+}
+
