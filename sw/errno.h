@@ -24,6 +24,7 @@ enum {
 	ENOENT,
 	ETIMEOUT,
 	EINVAL,
+	EURUN,
 };
 
 #endif

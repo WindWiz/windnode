@@ -27,15 +27,27 @@ static int cmd_error(int err, char *buf, size_t buflen)
 
 	switch (err) {
 		case -ENOENT:
-			msg = "Command not found";
+			msg = "ENOENT";
 			break;
 
 		case -ENOMEM:
-			msg = "Not enough memory";
+			msg = "ENOMEM";
+			break;
+
+		case -EINVAL:
+			msg = "EINVAL";
+			break;
+
+		case -ETIMEOUT:
+			msg = "ETIMEOUT";
+			break;
+
+		case -EURUN:
+			msg = "EURUN";
 			break;
 
 		default:
-			msg = "Command failed (unknown error)";
+			msg = "UNKNOWN";
 	}
 
 	len = buflen < strlen(msg) ? buflen : strlen(msg);

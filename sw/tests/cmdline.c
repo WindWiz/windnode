@@ -76,7 +76,7 @@ static struct test testvectors[] = {
 	/* Single command */
 	{ "PI", 				"3.14;" },
 	/* SHORT (nonexisting) command */
-	{ "H",					"Command not found;" },
+	{ "H",					"ENOENT;" },
 	/* Space-prefixed command */
 	{ "  PI", 				"3.14;" },
 	/* Space-padded command */
@@ -92,17 +92,17 @@ static struct test testvectors[] = {
 	/* Multiple commands */
 	{ "PI;      SQUARE 4",	"3.14;16;" },
 	/* Unknown command */
-	{ "THIS COMMAND DOES NOT EXIST", "Command not found;" },
+	{ "THIS COMMAND DOES NOT EXIST", "ENOENT;" },
 	/* Multiple commands including unknown command */
-	{ "PI; SECOND MISSING; SQUARE 2", "3.14;Command not found;4;" },
+	{ "PI; SECOND MISSING; SQUARE 2", "3.14;ENOENT;4;" },
 	/* Null-commands */
 	{ ";;;;;PI;;;", "3.14;" },
 	/* Multiple arguments */
 	{ "MUL 2 4", "8;" },
 	/* Outbuffer overruns */
-	{ "PI;PI;PI;PI;PI;PI", "3.14;3.14;3.14;3.14;3.14;N;" },
-	{ "MUL 10000 10000; MUL 10000 10000; MUL 10000 10000;", "100000000;100000000;Not en;" },
-	{ "INVALID; COMMAND; UNKNOWN; COMMAND", "Command not found;Command ;"}
+	{ "PI;PI;PI;PI;PI;PI", "3.14;3.14;3.14;3.14;3.14;E;" },
+	{ "MUL 10000 10000; MUL 10000 10000; MUL 10000 10000;", "100000000;100000000;ENOMEM;" },
+	{ "INVALID; COMMAND; UNKNOWN; COMMAND", "ENOENT;ENOENT;ENOENT;ENOEN;"}
 };
 
 int main(void)
