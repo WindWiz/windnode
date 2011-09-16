@@ -1,3 +1,4 @@
+#include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -110,10 +111,15 @@ int main(void)
 	int i;
 	char outbuf[28];
 
+	srand(time(NULL));
 	for (i = 0; i < sizeof(testvectors)/sizeof(testvectors[0]); i++) {
 		struct test *t = &testvectors[i];
 		char *inbuf = malloc(strlen(t->input) + 1); 
-		outbuf[0] = '\0';	/* Reset output buffer */
+		int k;
+
+		/* Reset output buffer with some fuzzy garbage.. */
+		for (k = 0; k < sizeof(outbuf); k++)
+			outbuf[k] = rand() % 256;
 
 		/* Duplicate string in writable memory for strtok */
 		strcpy(inbuf, t->input);
