@@ -20,16 +20,8 @@
 #include "ringbuf.h"
 #include "uart.h"
 
-struct uart_private {
-	struct ringbuf tx;
-	struct ringbuf rx;
-	uart_orun_handler_t orun;
-};
-
-static struct uart_private port;
-
-static uint8_t tx_buffer[CONFIG_UART_TX_BUF];
-static uint8_t rx_buffer[CONFIG_UART_RX_BUF];
+static struct ringbuf tx;
+static struct ringbuf rx;
 
 #define TX_IRQ_DISABLE()	UCSR0B &= ~(_BV(UDRIE0))
 #define TX_IRQ_ENABLE()		UCSR0B |= _BV(UDRIE0)
@@ -38,17 +30,15 @@ static uint8_t rx_buffer[CONFIG_UART_RX_BUF];
 
 ISR(USART_RX_vect)
 {
-	unsigned char rx = UDR0;
-	if (!rb_is_full(&port.rx))
-		rb_insert_tail(&port.rx, rx);
-	else if (port.orun)
-		port.orun();
+	unsigned char rx_pin = UDR0;
+	if (!rb_is_full(&rx))
+		rb_insert_tail(&rx, rx_pin);
 }
 
 ISR(USART_UDRE_vect)
 {
-	if (!rb_is_empty(&port.tx))
-		UDR0 = rb_remove_head(&port.tx);
+	if (!rb_is_empty(&tx))
+		UDR0 = rb_remove_head(&tx);
 	else
 		TX_IRQ_DISABLE();
 }
@@ -58,10 +48,10 @@ static int uart_getc(FILE *stream)
 	int ret = 0;
 
 	RX_IRQ_DISABLE();
-	if (rb_is_empty(&port.rx))
+	if (rb_is_empty(&rx))
 		ret = _FDEV_EOF;
 	else
-		ret = rb_remove_head(&port.rx);
+		ret = rb_remove_head(&rx);
 	RX_IRQ_ENABLE();
 
 	return ret;
@@ -73,8 +63,8 @@ static int uart_putc(char c, FILE *stream)
 
 	do {
 		TX_IRQ_DISABLE();
-		if (!rb_is_full(&port.tx)) {
-			rb_insert_tail(&port.tx, c);
+		if (!rb_is_full(&tx)) {
+			rb_insert_tail(&tx, c);
 			queued = 1;
 		}
 		TX_IRQ_ENABLE();
@@ -83,13 +73,12 @@ static int uart_putc(char c, FILE *stream)
 	return 0;
 }
 
-void uart_init(unsigned int ubrr, FILE *stream, uart_orun_handler_t orun)
+void uart_init(unsigned int ubrr, FILE *stream, uint8_t *rx_buf,
+	uint8_t rx_size, uint8_t *tx_buf, uint8_t tx_size)
 {
 	/* Setup context */
-	rb_init(&port.rx, &rx_buffer[0], CONFIG_UART_RX_BUF);
-	rb_init(&port.tx, &tx_buffer[0], CONFIG_UART_TX_BUF);
-
-	port.orun = orun;
+	rb_init(&rx, rx_buf, rx_size);
+	rb_init(&tx, tx_buf, tx_size);
 
 	/* Baudrate */
 	UBRR0H = (uint8_t) (ubrr >> 8);

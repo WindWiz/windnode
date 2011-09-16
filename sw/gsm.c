@@ -28,6 +28,8 @@
 #define D(x)
 
 static FILE f_gsm;
+static uint8_t tx_buf[CONFIG_GSM_TX_BUF];
+static uint8_t rx_buf[CONFIG_GSM_RX_BUF];
 
 static void gsm_power(uint16_t delay)
 {
@@ -61,7 +63,8 @@ void gsm_reset(void)
 
 int gsm_init(void)
 {	
-	uart_init(UART_BAUD(CONFIG_GSM_BAUDRATE, F_CPU), &f_gsm, NULL);
+	uart_init(UART_BAUD(CONFIG_GSM_BAUDRATE, F_CPU), &f_gsm, rx_buf,
+		CONFIG_GSM_RX_BUF, tx_buf, CONFIG_GSM_TX_BUF);
 
 	/* Tri-state ON+RST pins with no pull-ups */
 	CONFIG_GSM_EN_DIR &= ~(_BV(CONFIG_GSM_EN_PIN));

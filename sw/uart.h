@@ -22,9 +22,8 @@
 
 #include <stdio.h>
 
-typedef int (*uart_orun_handler_t)(void);
-
-void uart_init(unsigned int ubrr, FILE *stream, uart_orun_handler_t orun);
+void uart_init(unsigned int ubrr, FILE *stream, uint8_t *rx_buf,
+	uint8_t rx_size, uint8_t *tx_buf, uint8_t tx_size);
 void uart_free(void);
 
 #endif
