@@ -88,7 +88,7 @@ static bool test_del(void)
 	list_for_each(tmp, &list) {
 		if (&d[i].list != tmp) {
 			printf("%s: unexpected order before del\n", __func__);
-			return EXIT_FAILURE;
+			return false;
 		}
 
 		i++;
@@ -100,7 +100,7 @@ static bool test_del(void)
 	list_for_each(tmp, &list) {
 		if (&d[i].list != tmp) {
 			printf("%s: unexpected order after first del\n", __func__);
-			return EXIT_FAILURE;
+			return false;
 		}
 
 		i += 2;
@@ -139,7 +139,7 @@ static bool test_safe_del(void)
 
 	if (i != 3) {
 		printf("%s: unexpected number of items in list (%d)\n", __func__, i);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	i = 0;
@@ -149,15 +149,15 @@ static bool test_safe_del(void)
 
 	if (i != 1) {
 		printf("%s: unexpected number of items in list (%d)\n", __func__, i);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	singular = list_first_entry(&list, struct dummy, list);
 	if (singular != &d[1]) {
 		printf("%s: unexpected item after del in safe loop\n", __func__);
-		return EXIT_FAILURE;
+		return false;
 	} else
-		return EXIT_SUCCESS;
+		return true;
 }
 
 int main(void)
