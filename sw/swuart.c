@@ -57,7 +57,7 @@ static void rx_pinchange_irq(uint8_t en)
 {
 	if (en)
 		CONFIG_SWUART_RX_PCMSK |= _BV(CONFIG_SWUART_RX_PCBIT);
-	else {		
+	else {
 		CONFIG_SWUART_RX_PCMSK &= ~(_BV(CONFIG_SWUART_RX_PCBIT));
 		PCIFR |= _BV(CONFIG_SWUART_RX_PCBIT);
 	}
@@ -166,17 +166,17 @@ ISR(TIMER0_COMPA_vect)
 			port.rx_state = UART_IDLE;
 			rx_timer_toggle(false);
 			rx_pinchange_irq(true);
-			break;			
+			break;
 	}
 }
 
-ISR(TIMER2_COMPA_vect) 
+ISR(TIMER2_COMPA_vect)
 {
 	switch (port.tx_state) {
 		case UART_IDLE:
 			/* We should never end up here */
 			break;
-		
+
 		case UART_STARTBIT:
 			tx_pin(STARTBIT);
 			port.tx_state = UART_DATA;
@@ -269,7 +269,7 @@ void swuart_init(unsigned int btime, FILE *stream, uint8_t *rx_buf,
 	/* CTC Mode */
 	TCCR0A = _BV(WGM01);
 	TCCR2A = _BV(WGM21);
-		
+
 	fdev_setup_stream(stream, swuart_putc, swuart_getc, _FDEV_SETUP_RW);
 
 	/* At this point, the timers are not started so its safe to unmask */
@@ -277,7 +277,7 @@ void swuart_init(unsigned int btime, FILE *stream, uint8_t *rx_buf,
 	tx_timer_irq(true);
 
 	/* Trigger interrupt on RX pin changes */
-	PCICR |= _BV(CONFIG_SWUART_RX_PCCTRL); 
+	PCICR |= _BV(CONFIG_SWUART_RX_PCCTRL);
 	rx_pinchange_irq(true);
 }
 
