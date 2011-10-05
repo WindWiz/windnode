@@ -48,9 +48,6 @@ struct swuart_private {
 
 static struct swuart_private port;
 
-static uint8_t tx_buffer[CONFIG_SWUART_TX_BUF];
-static uint8_t rx_buffer[CONFIG_SWUART_RX_BUF];
-
 static uint8_t rx_pin(void)
 {
 	return (CONFIG_SWUART_RX_PIN & _BV(CONFIG_SWUART_RX_BIT)) != 0;
@@ -250,10 +247,11 @@ static int swuart_putc(char c, FILE *stream)
 	return 0;
 }
 
-void swuart_init(unsigned int btime, FILE *stream)
+void swuart_init(unsigned int btime, FILE *stream, uint8_t *rx_buf,
+    uint8_t rx_size, uint8_t *tx_buf, uint8_t tx_size)
 {
-	rb_init(&port.rx_buf, &rx_buffer[0], CONFIG_SWUART_RX_BUF);
-	rb_init(&port.tx_buf, &tx_buffer[0], CONFIG_SWUART_TX_BUF);
+	rb_init(&port.rx_buf, rx_buf, rx_size);
+	rb_init(&port.tx_buf, tx_buf, tx_size);
 
 	port.tx_state = UART_IDLE;
 	port.rx_state = UART_IDLE;

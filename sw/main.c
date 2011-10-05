@@ -32,6 +32,9 @@
 
 static FILE f_debug;
 
+static uint8_t dbg_rx[CONFIG_DEBUG_RX_BUF];
+static uint8_t dbg_tx[CONFIG_DEBUG_TX_BUF];
+
 static int cmd_stackdepth(char *arg, char *buf, size_t buflen)
 {
 	char tmp[30];
@@ -145,7 +148,8 @@ int main(void)
 	uint8_t cause = MCUSR;
 	MCUSR = 0;
 
-	swuart_init(SWUART_BAUD(CONFIG_DEBUG_BAUDRATE, F_CPU), &f_debug);
+	swuart_init(SWUART_BAUD(CONFIG_DEBUG_BAUDRATE, F_CPU), &f_debug,
+		dbg_rx, sizeof(dbg_rx), dbg_tx, sizeof(dbg_tx));
 
 	stdout = &f_debug;
 	stdin = &f_debug;

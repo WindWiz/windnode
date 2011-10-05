@@ -52,10 +52,11 @@
 #define CONFIG_GSM_RX_BUF (20)
 #define CONFIG_GSM_TX_BUF (20)
 
-/* Software UART */
-#define CONFIG_SWUART_RX_BUF (20)
-#define CONFIG_SWUART_TX_BUF (20)
+/* Debug port buffers */
+#define CONFIG_DEBUG_RX_BUF (20)
+#define CONFIG_DEBUG_TX_BUF (20)
 
+/* Software UART */
 #define CONFIG_SWUART_RX_BIT	(PB3)
 #define CONFIG_SWUART_RX_PORT	(PORTB)
 #define CONFIG_SWUART_RX_PIN	(PINB)
