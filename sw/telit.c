@@ -25,13 +25,10 @@
 #include "uart.h"
 #include "time.h"
 
-#define D(x)
-
-static FILE f_gsm;
 static uint8_t tx_buf[CONFIG_GSM_TX_BUF];
 static uint8_t rx_buf[CONFIG_GSM_RX_BUF];
 
-static void gsm_power(uint16_t delay)
+static void telit_power(uint16_t delay)
 {
 	/* ON pin is inverted by transistor on GSM playground board */
 	CONFIG_GSM_EN_PORT |= _BV(CONFIG_GSM_EN_PIN);
@@ -41,17 +38,17 @@ static void gsm_power(uint16_t delay)
 	CONFIG_GSM_EN_DIR &= ~(_BV(CONFIG_GSM_EN_PIN));
 }
 
-void gsm_power_down(void)
+void telit_power_down(void)
 {
-	gsm_power(2000);
+	telit_power(2000);
 }
 
-void gsm_power_up(void)
+void telit_power_up(void)
 {
-	gsm_power(1000);
+	telit_power(1000);
 }
 
-void gsm_reset(void)
+void telit_reset(void)
 {
 	/* RST pin is inverted by transistor on GSM playground board */
 	CONFIG_GSM_RST_PORT |= _BV(CONFIG_GSM_RST_PIN);
@@ -61,9 +58,9 @@ void gsm_reset(void)
 	CONFIG_GSM_RST_DIR &= ~(_BV(CONFIG_GSM_RST_PIN));
 }
 
-int gsm_init(void)
+int telit_init(FILE *stream)
 {	
-	uart_init(UART_BAUD(CONFIG_GSM_BAUDRATE, F_CPU), &f_gsm, rx_buf,
+	uart_init(UART_BAUD(CONFIG_GSM_BAUDRATE, F_CPU), stream, rx_buf,
 		CONFIG_GSM_RX_BUF, tx_buf, CONFIG_GSM_TX_BUF);
 
 	/* Tri-state ON+RST pins with no pull-ups */
@@ -75,98 +72,9 @@ int gsm_init(void)
 
 	_delay_ms(100); /* Allow for signals to stabilize */
 
-	gsm_reset();
+	telit_reset();
 	
 	return 0;
 }
 
-static int gsm_getc(uint8_t timeout)
-{
-	uint32_t t0 = time_jiffies();
-	int c;
-
-	do {
-		c = fgetc(&f_gsm);
-		if (c != EOF)
-			return c;
-	} while(time_jiffies() - t0 < timeout);
-
-	return -1; /* timeout */
-}
-
-/* Discard response up to and including next <LF> */
-static void gsm_discard_response(void)
-{
-	int c;
-
-	do {
-		c = gsm_getc(1*HZ);
-		if (c < 0)
-			break;	/* timeout */
-	} while ((uint8_t) c != '\n');
-}
-
-int gsm_read_response(char *buf, size_t buf_len, uint8_t timeout)
-{
-	size_t len = 0;
-	int c;
-
-	gsm_discard_response();
-	D(printf("Response: "));
-	do {
-		c = gsm_getc(timeout);
-		if (c < 0) {
-			D(printf("Timeout!\n"));
-			return -ETIMEOUT;
-		}
-
-		buf[len++] = (uint8_t) c;
-
-		D(printf("0x%x ", (uint8_t) c));
-		if (len >= 2 && buf[len-1] == '\n' && buf[len-2] == '\r') {
-			D(printf("\n"));
-			buf[len-2] = '\0'; /* \r */
-			buf[len-1] = '\0'; /* \n */
-			return len-2;
-		}
-	} while (len < buf_len);
-
-	D(printf("Mismatch!\n"));
-	buf[0] = '\0';
-	gsm_discard_response();
-
-	return -ENOMEM;
-}
-
-int gsm_check_response(char *expected, uint8_t timeout)
-{
-	size_t expected_len = strlen(expected);
-	size_t len = 0;
-	int c;
-	int ret = 0;
-
-	do {
-		c = gsm_getc(timeout);
-		if (c < 0)
-			return -ETIMEOUT;
-
-		if (expected[len] != (uint8_t) c) {
-			ret = -EINVAL;
-			break;
-		}
-
-		len++;
-	} while (len < expected_len);
-
-	return ret;
-}
-
-int gsm_at(char *cmd)
-{
-	fputs(cmd, &f_gsm);
-	fputs("\r\n", &f_gsm);
-
-	D(printf("Write: %s\n", cmd));
-	return 0;
-}
 
