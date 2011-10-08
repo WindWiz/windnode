@@ -8,4 +8,3 @@ static inline void led(uint8_t en)
 	else
 		CONFIG_LED_PORT &= ~(_BV(CONFIG_LED_PIN));
 }
-

@@ -26,35 +26,33 @@ extern uint8_t __heap_start;
 extern uint8_t __stack;
 
 void stackmon_paint(void) __attribute__ ((naked))
-	__attribute__ ((section (".init1")));
+    __attribute__ ((section(".init1")));
 
 void stackmon_paint(void)
 {
 	__asm volatile ("    ldi r30,lo8(__heap_start)\n"
-                    "    ldi r31,hi8(__heap_start)\n"
-                    "    ldi r24,lo8(0xAC)\n"
-                    "    ldi r25,hi8(__stack)\n"
-                    "    rjmp .cmp\n"
-                    ".loop:\n"
-                    "    st Z+,r24\n"
-                    ".cmp:\n"
-                    "    cpi r30,lo8(__stack)\n"
-                    "    cpc r31,r25\n"
-                    "    brlo .loop\n"
-                    "    breq .loop"::);
+	    "    ldi r31,hi8(__heap_start)\n"
+	    "    ldi r24,lo8(0xAC)\n"
+	    "    ldi r25,hi8(__stack)\n"
+	    "    rjmp .cmp\n"
+	    ".loop:\n"
+	    "    st Z+,r24\n"
+	    ".cmp:\n"
+	    "    cpi r30,lo8(__stack)\n"
+	    "    cpc r31,r25\n" "    brlo .loop\n" "    breq .loop"::);
 }
 
 static uint16_t stackmon_minfree(void)
 {
-    const uint8_t *p = &__heap_start;
-    uint16_t minfree = 0;
+	const uint8_t *p = &__heap_start;
+	uint16_t minfree = 0;
 
-    while(*p == 0xAC && p <= &__stack) {
-        p++;
-        minfree++;
-    }
+	while (*p == 0xAC && p <= &__stack) {
+		p++;
+		minfree++;
+	}
 
-    return minfree;
+	return minfree;
 }
 
 uint16_t stackmon_stacksize(void)

@@ -41,8 +41,7 @@ static int cmd_stackdepth(char *arg, char *buf, size_t buflen)
 {
 	char tmp[30];
 
-	sprintf(tmp, "Depth %d Limit %d", stackmon_maxdepth(),
-		stackmon_stacksize());
+	sprintf(tmp, "Depth %d Limit %d", stackmon_maxdepth(), stackmon_stacksize());
 
 	if (buflen >= strlen(tmp)) {
 		strcat(buf, tmp);
@@ -90,7 +89,7 @@ static int cmd_gsmat(char *arg, char *buf, size_t buflen)
 
 static int cmd_gsmresp(char *arg, char *buf, size_t buflen)
 {
-	return at_response(&f_gsm, buf, buflen, 2*HZ);
+	return at_response(&f_gsm, buf, buflen, 2 * HZ);
 }
 
 static int cmd_delay(char *arg, char *buf, size_t buflen)
@@ -98,10 +97,10 @@ static int cmd_delay(char *arg, char *buf, size_t buflen)
 	uint8_t timeout = atoi(arg);
 	uint32_t t0 = time_jiffies();
 
-	while (time_jiffies() - t0 < timeout*HZ);
+	while (time_jiffies() - t0 < timeout * HZ) ;
 
 	strcat(buf, "OK");
-	return 2;	
+	return 2;
 }
 
 /* Sorted by priority */
@@ -131,11 +130,11 @@ static void cmdline_loop(void)
 		while (in_cmd) {
 			int c = fgetc(stdin);
 			if (c != EOF) {
-				if (c == '\n' || c == '\r' || inlen == sizeof(in) - 1) {
+				if (c == '\n' || c == '\r' ||
+				    inlen == sizeof(in) - 1) {
 					in[inlen] = '\0';
 					cmd_exec(commandlist, in, out, sizeof(out));
 
-					
 					printf("%s (%d bytes)\n", out, strlen(out));
 					in_cmd = false;
 				} else
@@ -151,7 +150,7 @@ int main(void)
 	MCUSR = 0;
 
 	swuart_init(SWUART_BAUD(CONFIG_DEBUG_BAUDRATE, F_CPU), &f_debug,
-		dbg_rx, sizeof(dbg_rx), dbg_tx, sizeof(dbg_tx));
+	    dbg_rx, sizeof(dbg_rx), dbg_tx, sizeof(dbg_tx));
 
 	stdout = &f_debug;
 	stdin = &f_debug;
@@ -162,7 +161,7 @@ int main(void)
 	sei();
 
 	printf("WindNode initialized, reset cause 0x%x, startup stack %d bytes\n",
-		cause, stackmon_maxdepth());
+	    cause, stackmon_maxdepth());
 
 	cmdline_loop();
 
@@ -172,4 +171,3 @@ int main(void)
 
 	return 0;
 }
-

@@ -11,7 +11,7 @@ static uint32_t jiffies;
 
 static void timer_done(void *p)
 {
-	struct timer_queue *x = (struct timer_queue *) p;
+	struct timer_queue *x = (struct timer_queue *)p;
 
 	if (x == &t0) {
 		timer_mod(x, jiffies + 50);
@@ -28,7 +28,8 @@ static void timer_done(void *p)
 static int test_no_expire(void)
 {
 	t0.func = t1.func = timer_done;
-	t0.data = &t0; t1.data = &t1;
+	t0.data = &t0;
+	t1.data = &t1;
 
 	t0_hit = t1_hit = 0;
 	jiffies = 0;
@@ -53,7 +54,8 @@ static int test_no_expire(void)
 static int test_t0_expire(void)
 {
 	t0.func = t1.func = timer_done;
-	t0.data = &t0; t1.data = &t1;
+	t0.data = &t0;
+	t1.data = &t1;
 
 	t0_hit = t1_hit = 0;
 	jiffies = 50;
@@ -78,7 +80,8 @@ static int test_t0_expire(void)
 static int test_t0_t1_expire(void)
 {
 	t0.func = t1.func = timer_done;
-	t0.data = &t0; t1.data = &t1;
+	t0.data = &t0;
+	t1.data = &t1;
 
 	t0_hit = t1_hit = 0;
 	jiffies = 100;
@@ -116,7 +119,8 @@ static int test_periodic_expire(void)
 	}
 
 	if (t0_hit != 4) {
-		printf("timers: %s: timer expired %d times (unexpected)\n", __func__, t0_hit);
+		printf("timers: %s: timer expired %d times (unexpected)\n", __func__,
+		    t0_hit);
 	}
 
 	return (t0_hit == 4);
@@ -135,6 +139,6 @@ int main(void)
 
 	if (!test_periodic_expire())
 		return EXIT_FAILURE;
-	
+
 	return EXIT_SUCCESS;
 }

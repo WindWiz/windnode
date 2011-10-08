@@ -22,8 +22,8 @@
 
 #include <stdio.h>
 
-void uart_init(unsigned int ubrr, FILE *stream, uint8_t *rx_buf,
-	uint8_t rx_size, uint8_t *tx_buf, uint8_t tx_size);
+void uart_init(unsigned int ubrr, FILE * stream, uint8_t * rx_buf,
+    uint8_t rx_size, uint8_t * tx_buf, uint8_t tx_size);
 void uart_free(void);
 
 #endif

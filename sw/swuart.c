@@ -24,7 +24,7 @@
 #define STARTBIT (0)
 #define STOPBIT (1)
 #define DATAWIDTH (8)
-#define TX_PRESCALER (_BV(CS22))		/* 64 */
+#define TX_PRESCALER (_BV(CS22))	/* 64 */
 #define RX_PRESCALER (_BV(CS01) | _BV(CS00))	/* 64 */
 
 enum {
@@ -114,7 +114,7 @@ ISR(CONFIG_SWUART_RX_PCVECT)
 	/* Glitch-protection: Check for start bit on RX PIN */
 	if (rxbit == STARTBIT) {
 		/* Setup to sample startbit in btime/2 */
-		TCNT0 = port.btime/2;
+		TCNT0 = port.btime / 2;
 		rx_timer_toggle(true);
 
 		port.rx_state = UART_STARTBIT;
@@ -122,93 +122,93 @@ ISR(CONFIG_SWUART_RX_PCVECT)
 	}
 }
 
-ISR(TIMER0_COMPA_vect) 
+ISR(TIMER0_COMPA_vect)
 {
 	uint8_t rxbit = rx_pin();
 
 	switch (port.rx_state) {
-		case UART_IDLE:
-			/* We should never end up here */
-			break;
+	case UART_IDLE:
+		/* We should never end up here */
+		break;
 
-		case UART_STARTBIT:
-			/* Check for valid startbit */
-			if (rxbit == STARTBIT)	{
-				port.rx_bitsleft = DATAWIDTH;
-				port.rx_state = UART_DATA;
-			} else {
-				/* Glitch-protection: return to idle if startbit has vanished */
-				port.rx_state = UART_IDLE;
-				rx_timer_toggle(false);
-				rx_pinchange_irq(true);
-			}
-			break;
-
-		case UART_DATA:
-			port.rx_sample = port.rx_sample >> 1;
-			port.rx_bitsleft--;
-
-			if (rxbit)
-				port.rx_sample |= _BV(DATAWIDTH-1);
-
-			if (port.rx_bitsleft == 0)
-				port.rx_state = UART_STOPBIT;
-			break;
-
-		case UART_STOPBIT:
-			/* Check for valid stopbit */
-			if (rxbit == STOPBIT) {
-				if (!rb_is_full(&port.rx_buf))
-					rb_insert_tail(&port.rx_buf, port.rx_sample);
-			}
-
-			/* Disable timer and re-enable startbit detector */
+	case UART_STARTBIT:
+		/* Check for valid startbit */
+		if (rxbit == STARTBIT) {
+			port.rx_bitsleft = DATAWIDTH;
+			port.rx_state = UART_DATA;
+		} else {
+			/* Glitch-protection: return to idle if startbit has vanished */
 			port.rx_state = UART_IDLE;
 			rx_timer_toggle(false);
 			rx_pinchange_irq(true);
-			break;
+		}
+		break;
+
+	case UART_DATA:
+		port.rx_sample = port.rx_sample >> 1;
+		port.rx_bitsleft--;
+
+		if (rxbit)
+			port.rx_sample |= _BV(DATAWIDTH - 1);
+
+		if (port.rx_bitsleft == 0)
+			port.rx_state = UART_STOPBIT;
+		break;
+
+	case UART_STOPBIT:
+		/* Check for valid stopbit */
+		if (rxbit == STOPBIT) {
+			if (!rb_is_full(&port.rx_buf))
+				rb_insert_tail(&port.rx_buf, port.rx_sample);
+		}
+
+		/* Disable timer and re-enable startbit detector */
+		port.rx_state = UART_IDLE;
+		rx_timer_toggle(false);
+		rx_pinchange_irq(true);
+		break;
 	}
 }
 
 ISR(TIMER2_COMPA_vect)
 {
 	switch (port.tx_state) {
-		case UART_IDLE:
-			/* We should never end up here */
-			break;
+	case UART_IDLE:
+		/* We should never end up here */
+		break;
 
-		case UART_STARTBIT:
-			tx_pin(STARTBIT);
-			port.tx_state = UART_DATA;
-			break;
+	case UART_STARTBIT:
+		tx_pin(STARTBIT);
+		port.tx_state = UART_DATA;
+		break;
 
-		case UART_DATA:
-			tx_pin(port.tx_sample & 0x1);
+	case UART_DATA:
+		tx_pin(port.tx_sample & 0x1);
 
-			port.tx_sample = port.tx_sample >> 1;
-			port.tx_bitsleft--;
-	
-			if (port.tx_bitsleft == 0)
-				port.tx_state = UART_STOPBIT;
-			break;
+		port.tx_sample = port.tx_sample >> 1;
+		port.tx_bitsleft--;
 
-		case UART_STOPBIT:
-			tx_pin(STOPBIT);
+		if (port.tx_bitsleft == 0)
+			port.tx_state = UART_STOPBIT;
+		break;
 
-			/* Schedule work for next cycle, if available */
-			if (!rb_is_empty(&port.tx_buf))	{
-				port.tx_bitsleft = DATAWIDTH;
-				port.tx_sample = rb_remove_head(&port.tx_buf);
-				port.tx_state = UART_STARTBIT;
-			} else {
-				tx_timer_toggle(false);
-				port.tx_state = UART_IDLE;
-			}
-			break;
+	case UART_STOPBIT:
+		tx_pin(STOPBIT);
+
+		/* Schedule work for next cycle, if available */
+		if (!rb_is_empty(&port.tx_buf)) {
+			port.tx_bitsleft = DATAWIDTH;
+			port.tx_sample = rb_remove_head(&port.tx_buf);
+			port.tx_state = UART_STARTBIT;
+		} else {
+			tx_timer_toggle(false);
+			port.tx_state = UART_IDLE;
+		}
+		break;
 	}
 }
 
-static int swuart_getc(FILE *stream)
+static int swuart_getc(FILE * stream)
 {
 	int ret = 0;
 
@@ -222,7 +222,7 @@ static int swuart_getc(FILE *stream)
 	return ret;
 }
 
-static int swuart_putc(char c, FILE *stream)
+static int swuart_putc(char c, FILE * stream)
 {
 	uint8_t queued = 0;
 
@@ -231,7 +231,7 @@ static int swuart_putc(char c, FILE *stream)
 			port.tx_bitsleft = DATAWIDTH;
 			port.tx_sample = c;
 			port.tx_state = UART_STARTBIT;
-			TCNT2 = 0;			
+			TCNT2 = 0;
 			tx_timer_toggle(true);
 			queued = 1;
 		} else {
@@ -247,8 +247,8 @@ static int swuart_putc(char c, FILE *stream)
 	return 0;
 }
 
-void swuart_init(unsigned int btime, FILE *stream, uint8_t *rx_buf,
-    uint8_t rx_size, uint8_t *tx_buf, uint8_t tx_size)
+void swuart_init(unsigned int btime, FILE * stream, uint8_t * rx_buf,
+    uint8_t rx_size, uint8_t * tx_buf, uint8_t tx_size)
 {
 	rb_init(&port.rx_buf, rx_buf, rx_size);
 	rb_init(&port.tx_buf, tx_buf, tx_size);
@@ -257,9 +257,9 @@ void swuart_init(unsigned int btime, FILE *stream, uint8_t *rx_buf,
 	port.rx_state = UART_IDLE;
 	port.btime = btime;
 
-	CONFIG_SWUART_RX_DIR  &= ~(_BV(CONFIG_SWUART_RX_BIT));
+	CONFIG_SWUART_RX_DIR &= ~(_BV(CONFIG_SWUART_RX_BIT));
 	CONFIG_SWUART_RX_PORT |= _BV(CONFIG_SWUART_RX_BIT);	/* Pull-up */
-	CONFIG_SWUART_TX_DIR  |= _BV(CONFIG_SWUART_TX_BIT);
+	CONFIG_SWUART_TX_DIR |= _BV(CONFIG_SWUART_TX_BIT);
 	tx_pin(STOPBIT);
 
 	/* Baudrate */

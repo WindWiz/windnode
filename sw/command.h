@@ -5,7 +5,7 @@
 struct command {
 	char *name;
 	uint8_t namelen;
-	int (*exec)(char *arg, char *buf, size_t buflen);
+	int (*exec) (char *arg, char *buf, size_t buflen);
 };
 
 #define CREATE_COMMAND(cmd, exec) \
@@ -20,6 +20,5 @@ struct command {
 	{ cmd, sizeof(cmd) - 1, exec }
 
 void cmd_exec(struct command *cmds[], char *in, char *buf, size_t buflen);
-
 
 #endif

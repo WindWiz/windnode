@@ -26,28 +26,28 @@ static int cmd_error(int err, char *buf, size_t buflen)
 		return 0;
 
 	switch (err) {
-		case -ENOENT:
-			msg = "ENOENT";
-			break;
+	case -ENOENT:
+		msg = "ENOENT";
+		break;
 
-		case -ENOMEM:
-			msg = "ENOMEM";
-			break;
+	case -ENOMEM:
+		msg = "ENOMEM";
+		break;
 
-		case -EINVAL:
-			msg = "EINVAL";
-			break;
+	case -EINVAL:
+		msg = "EINVAL";
+		break;
 
-		case -ETIMEOUT:
-			msg = "ETIMEOUT";
-			break;
+	case -ETIMEOUT:
+		msg = "ETIMEOUT";
+		break;
 
-		case -EURUN:
-			msg = "EURUN";
-			break;
+	case -EURUN:
+		msg = "EURUN";
+		break;
 
-		default:
-			msg = "UNKNOWN";
+	default:
+		msg = "UNKNOWN";
 	}
 
 	len = buflen < strlen(msg) ? buflen : strlen(msg);
@@ -56,8 +56,7 @@ static int cmd_error(int err, char *buf, size_t buflen)
 	return len;
 }
 
-static int __cmd_exec(struct command *cmdlist[], char *cmd, char *buf, 
-	size_t buflen)
+static int __cmd_exec(struct command *cmdlist[], char *cmd, char *buf, size_t buflen)
 {
 	struct command *acmd;
 	int cmdlen;
@@ -89,7 +88,7 @@ static int __cmd_exec(struct command *cmdlist[], char *cmd, char *buf,
 				return -ENOMEM;
 
 			arg = ltrim(arg);
-			written = acmd->exec(arg, buf, buflen - CMD_SEP_LEN); 
+			written = acmd->exec(arg, buf, buflen - CMD_SEP_LEN);
 			if (written > 0) {
 				strcpy(&buf[written], CONFIG_CMDLINE_SEPARATOR);
 				written += CMD_SEP_LEN;
@@ -108,9 +107,9 @@ void cmd_exec(struct command *cmdlist[], char *in, char *buf, size_t buflen)
 	int written;
 	char *token;
 
-	buflen--; 	/* Reserve NULL terminator */
+	buflen--;		/* Reserve NULL terminator */
 
-	buf[0] = '\0'; /* Reset output */
+	buf[0] = '\0';		/* Reset output */
 	token = strtok(in, CONFIG_CMDLINE_SEPARATOR);
 	while (token) {
 		written = __cmd_exec(cmdlist, token, bufpos, buflen);
@@ -125,4 +124,3 @@ void cmd_exec(struct command *cmdlist[], char *in, char *buf, size_t buflen)
 		token = strtok(NULL, CONFIG_CMDLINE_SEPARATOR);
 	}
 }
-

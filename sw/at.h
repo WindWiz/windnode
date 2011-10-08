@@ -21,10 +21,10 @@
 #include <stdio.h>
 #include <stdint.h>
 
-int at_verify_response(FILE *stream, char *expected, uint16_t timeout);
-int at_cmd(FILE *stream, char *cmd);
-int at_response(FILE *stream, char *buf, size_t buf_len, uint16_t timeout);
-int at_info(FILE *stream, char *cmd, char *buf, size_t buflen, uint16_t timeout);
-int at_simple(FILE *stream, char *cmd, uint16_t timeout);
+int at_verify_response(FILE * stream, char *expected, uint16_t timeout);
+int at_cmd(FILE * stream, char *cmd);
+int at_response(FILE * stream, char *buf, size_t buf_len, uint16_t timeout);
+int at_info(FILE * stream, char *cmd, char *buf, size_t buflen, uint16_t timeout);
+int at_simple(FILE * stream, char *cmd, uint16_t timeout);
 
 #endif

@@ -27,7 +27,7 @@
 
 #define AT_ERROR "ERROR"
 
-static int at_getc(FILE *stream, uint16_t timeout)
+static int at_getc(FILE * stream, uint16_t timeout)
 {
 	uint32_t t0 = time_jiffies();
 	int c;
@@ -36,29 +36,29 @@ static int at_getc(FILE *stream, uint16_t timeout)
 		c = fgetc(stream);
 		if (c != EOF)
 			return c;
-	} while(time_jiffies() - t0 < timeout);
+	} while (time_jiffies() - t0 < timeout);
 
-	return -ETIMEOUT; /* timeout */
+	return -ETIMEOUT;	/* timeout */
 }
 
-static void at_discard_until(FILE *stream, uint8_t x)
+static void at_discard_until(FILE * stream, uint8_t x)
 {
 	int c;
 
 	do {
-		c = at_getc(stream, 1*HZ);
+		c = at_getc(stream, 1 * HZ);
 		if (c < 0)
 			break;	/* timeout */
-#ifdef D						
+#ifdef D
 		if (c >= 32 && c < 127)
 			printf("Throw '%c'\n", (uint8_t) c);
 		else
 			printf("Throw 0x%x\n", (uint8_t) c);
-#endif		
+#endif
 	} while ((uint8_t) c != x);
 }
 
-int at_verify_response(FILE *stream, char *expected, uint16_t timeout)
+int at_verify_response(FILE * stream, char *expected, uint16_t timeout)
 {
 	size_t expected_len = strlen(expected);
 	size_t len = 0;
@@ -71,13 +71,13 @@ int at_verify_response(FILE *stream, char *expected, uint16_t timeout)
 			return c;
 
 		if (expected[len] != (uint8_t) c) {
-#ifdef D						
+#ifdef D
 			if (c >= 32 && c < 127)
-				printf("Expected %dth char '%c' but got '%c'\n", len, 
-					expected[len], (uint8_t) c);
+				printf("Expected %dth char '%c' but got '%c'\n", len,
+				    expected[len], (uint8_t) c);
 			else
 				printf("Expected %dth char 0x%x but got 0x%x\n", len,
-					expected[len], (uint8_t) c);
+				    expected[len], (uint8_t) c);
 #endif
 			at_discard_until(stream, '\n');
 			ret = -EINVAL;
@@ -90,36 +90,36 @@ int at_verify_response(FILE *stream, char *expected, uint16_t timeout)
 	return ret;
 }
 
-int at_cmd(FILE *stream, char *cmd)
+int at_cmd(FILE * stream, char *cmd)
 {
 	int c;
 	fputs(cmd, stream);
 	fputc('\r', stream);
 
-	c = at_verify_response(stream, cmd, 1*HZ);
+	c = at_verify_response(stream, cmd, 1 * HZ);
 	switch (c) {
-		case -EINVAL:
-			/* XXX: Flush RX ringbuf */
-			break;
+	case -EINVAL:
+		/* XXX: Flush RX ringbuf */
+		break;
 
-		case -ETIMEOUT:
-			/* Not much we can do .. */
-			break;
+	case -ETIMEOUT:
+		/* Not much we can do .. */
+		break;
 
-		default:
-			c = at_getc(stream, 1*HZ);
-			if (c < 0)
-				return c;
-			if ((uint8_t) c == '\r')
-				return 0;
-			else
-				return -EINVAL;
+	default:
+		c = at_getc(stream, 1 * HZ);
+		if (c < 0)
+			return c;
+		if ((uint8_t) c == '\r')
+			return 0;
+		else
+			return -EINVAL;
 	}
 
 	return c;
 }
 
-int at_response(FILE *stream, char *buf, size_t buf_len, uint16_t timeout)
+int at_response(FILE * stream, char *buf, size_t buf_len, uint16_t timeout)
 {
 	int ret;
 	size_t len = 0;
@@ -140,11 +140,11 @@ int at_response(FILE *stream, char *buf, size_t buf_len, uint16_t timeout)
 		buf[len++] = (uint8_t) c;
 
 		D(printf("0x%x ", (uint8_t) c));
-		if (len >= 2 && buf[len-1] == '\n' && buf[len-2] == '\r') {
+		if (len >= 2 && buf[len - 1] == '\n' && buf[len - 2] == '\r') {
 			D(printf("\n"));
-			buf[len-2] = '\0'; /* \r */
-			buf[len-1] = '\0'; /* \n */
-			return len-2;
+			buf[len - 2] = '\0';	/* \r */
+			buf[len - 1] = '\0';	/* \n */
+			return len - 2;
 		}
 	} while (len < buf_len);
 
@@ -155,7 +155,7 @@ int at_response(FILE *stream, char *buf, size_t buf_len, uint16_t timeout)
 	return -ENOMEM;
 }
 
-int at_info(FILE *stream, char *cmd, char *buf, size_t buflen, uint16_t timeout)
+int at_info(FILE * stream, char *cmd, char *buf, size_t buflen, uint16_t timeout)
 {
 	int ret;
 	int size;
@@ -172,15 +172,15 @@ int at_info(FILE *stream, char *cmd, char *buf, size_t buflen, uint16_t timeout)
 
 	if (size >= strlen(AT_ERROR) && !strcmp(buf, AT_ERROR))
 		return -EFAULT;
-	
-	ret = at_verify_response(stream, "\r\nOK\r\n", 1*HZ);
+
+	ret = at_verify_response(stream, "\r\nOK\r\n", 1 * HZ);
 	if (ret)
 		return ret;
 
 	return size;
 }
 
-int at_simple(FILE *stream, char *cmd, uint16_t timeout)
+int at_simple(FILE * stream, char *cmd, uint16_t timeout)
 {
 	int ret;
 
@@ -190,4 +190,3 @@ int at_simple(FILE *stream, char *cmd, uint16_t timeout)
 
 	return at_verify_response(stream, "\r\nOK\r\n", timeout);
 }
-

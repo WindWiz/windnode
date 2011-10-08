@@ -19,10 +19,9 @@
 
 #include <stdio.h>
 
-int telit_init(FILE *stream);
+int telit_init(FILE * stream);
 void telit_power_up();
 void telit_power_down();
 void telit_reset();
 
 #endif
-

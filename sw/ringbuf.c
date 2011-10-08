@@ -15,12 +15,12 @@
  * along with Windnode.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>	
+#include <stdlib.h>
 #include <stdint.h>
 #include "ringbuf.h"
 #include "errno.h"
 
-void rb_init(struct ringbuf *rb, uint8_t *buf, uint8_t capacity)
+void rb_init(struct ringbuf *rb, uint8_t * buf, uint8_t capacity)
 {
 	rb->size = 0;
 	rb->data = buf;
@@ -34,7 +34,7 @@ uint8_t rb_is_full(struct ringbuf *rb)
 	return rb->size == rb->capacity;
 }
 
-uint8_t rb_is_empty(struct ringbuf *rb)
+uint8_t rb_is_empty(struct ringbuf * rb)
 {
 	return rb->size == 0;
 }
@@ -49,7 +49,7 @@ static inline void __rb_insert_tail(struct ringbuf *rb, uint8_t data)
 
 void rb_insert_tail(struct ringbuf *rb, uint8_t data)
 {
-	__rb_insert_tail(rb, data);	
+	__rb_insert_tail(rb, data);
 	rb->size++;
 }
 
@@ -62,9 +62,8 @@ static inline uint8_t __rb_remove_head(struct ringbuf *rb)
 	return data;
 }
 
-uint8_t rb_remove_head(struct ringbuf *rb)
+uint8_t rb_remove_head(struct ringbuf * rb)
 {
 	rb->size--;
 	return __rb_remove_head(rb);
 }
-
