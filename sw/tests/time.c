@@ -19,7 +19,7 @@
 #include <sys/time.h>
 #include "time.h"
 
-volatile uint32_t jiffies = 0; /* Don't support direct read-out on host */
+volatile uint32_t jiffies = 0;	/* Don't support direct read-out on host */
 
 uint32_t time_jiffies(void)
 {
@@ -29,7 +29,7 @@ uint32_t time_jiffies(void)
 		perror("time_jiffies");
 		return ~0;
 	}
-	
+
 	return (t.tv_sec * HZ) + msecs_to_jiffies((t.tv_usec / 1000));
 }
 
@@ -37,4 +37,3 @@ void time_init(void)
 {
 	/* NO-OP */
 }
-

@@ -7,7 +7,7 @@
 struct timer_queue {
 	struct list_head list;
 	uint32_t expire;
-	void (*func)(void *);
+	void (*func) (void *);
 	void *data;
 };
 

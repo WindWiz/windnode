@@ -9,4 +9,4 @@
 	((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
 #endif
 
-#endif /* _TARGET_H_ */
+#endif				/* _TARGET_H_ */

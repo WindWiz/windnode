@@ -44,4 +44,4 @@ uint32_t time_jiffies(void);
 
 extern volatile uint32_t jiffies;
 
-#endif /* _JIFFIES_H_ */
+#endif				/* _JIFFIES_H_ */

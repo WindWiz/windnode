@@ -58,10 +58,10 @@ void telit_reset(void)
 	CONFIG_GSM_RST_DIR &= ~(_BV(CONFIG_GSM_RST_PIN));
 }
 
-int telit_init(FILE *stream)
-{	
+int telit_init(FILE * stream)
+{
 	uart_init(UART_BAUD(CONFIG_GSM_BAUDRATE, F_CPU), stream, rx_buf,
-		CONFIG_GSM_RX_BUF, tx_buf, CONFIG_GSM_TX_BUF);
+	    CONFIG_GSM_RX_BUF, tx_buf, CONFIG_GSM_TX_BUF);
 
 	/* Tri-state ON+RST pins with no pull-ups */
 	CONFIG_GSM_EN_DIR &= ~(_BV(CONFIG_GSM_EN_PIN));
@@ -70,11 +70,9 @@ int telit_init(FILE *stream)
 	CONFIG_GSM_RST_DIR &= ~(_BV(CONFIG_GSM_RST_PIN));
 	CONFIG_GSM_RST_PORT &= ~(_BV(CONFIG_GSM_RST_PIN));
 
-	_delay_ms(100); /* Allow for signals to stabilize */
+	_delay_ms(100);		/* Allow for signals to stabilize */
 
 	telit_reset();
-	
+
 	return 0;
 }
-
-

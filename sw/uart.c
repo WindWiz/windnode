@@ -43,7 +43,7 @@ ISR(USART_UDRE_vect)
 		TX_IRQ_DISABLE();
 }
 
-static int uart_getc(FILE *stream)
+static int uart_getc(FILE * stream)
 {
 	int ret = 0;
 
@@ -57,7 +57,7 @@ static int uart_getc(FILE *stream)
 	return ret;
 }
 
-static int uart_putc(char c, FILE *stream)
+static int uart_putc(char c, FILE * stream)
 {
 	uint8_t queued = 0;
 
@@ -73,8 +73,8 @@ static int uart_putc(char c, FILE *stream)
 	return 0;
 }
 
-void uart_init(unsigned int ubrr, FILE *stream, uint8_t *rx_buf,
-	uint8_t rx_size, uint8_t *tx_buf, uint8_t tx_size)
+void uart_init(unsigned int ubrr, FILE * stream, uint8_t * rx_buf,
+    uint8_t rx_size, uint8_t * tx_buf, uint8_t tx_size)
 {
 	/* Setup context */
 	rb_init(&rx, rx_buf, rx_size);
@@ -97,4 +97,3 @@ void uart_init(unsigned int ubrr, FILE *stream, uint8_t *rx_buf,
 void uart_free(void)
 {
 }
-

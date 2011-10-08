@@ -33,23 +33,23 @@
 
 void eeprom_write_config(struct cfg *c)
 {
-	uint16_t addr = 0;	
+	uint16_t addr = 0;
 	uint16_t i;
 	uint16_t cfg_size = sizeof(*c);
 	uint16_t magic = CFG_MAGIC;
 	uint16_t csum = 0xffff;
-	
+
 	eeprom_update_block(&magic, (uint16_t *) addr, sizeof(magic));
 	addr += sizeof(magic);
 
 	eeprom_update_block(&cfg_size, (uint16_t *) addr, sizeof(cfg_size));
 	addr += sizeof(cfg_size);
 
-	for(i = 0; i < cfg_size; i++) 
-		csum = _crc16_update(csum, ((char *) c)[i]);
+	for (i = 0; i < cfg_size; i++)
+		csum = _crc16_update(csum, ((char *)c)[i]);
 
 	eeprom_update_block(&csum, (uint16_t *) addr, sizeof(csum));
-	addr += sizeof(csum); 
+	addr += sizeof(csum);
 
 	eeprom_update_block(c, (uint16_t *) addr, cfg_size);
 }
@@ -61,9 +61,9 @@ uint8_t eeprom_read_config(struct cfg *c)
 	uint16_t cfg_size;
 	uint16_t magic;
 	uint16_t csum, calc_csum = 0xffff;
-	
+
 	eeprom_read_block((uint16_t *) addr, &magic, sizeof(magic));
-	addr += sizeof(magic);	
+	addr += sizeof(magic);
 	if (magic != CFG_MAGIC)
 		return 1;
 
@@ -79,9 +79,9 @@ uint8_t eeprom_read_config(struct cfg *c)
 
 	eeprom_read_block((uint16_t *) addr, c, cfg_size);
 
-	for(i = 0; i < cfg_size; i++) 
-		calc_csum = _crc16_update(calc_csum, ((char *) c)[i]);		
-	
+	for (i = 0; i < cfg_size; i++)
+		calc_csum = _crc16_update(calc_csum, ((char *)c)[i]);
+
 	if (calc_csum != csum)
 		return 2;
 

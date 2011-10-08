@@ -18,7 +18,7 @@ struct list_head {
 	{ .next = (lst), .prev = (lst) }
 
 static inline void __list_add(struct list_head *n, struct list_head *prev,
-	struct list_head *next)
+    struct list_head *next)
 {
 	next->prev = n;
 	n->next = next;
@@ -26,8 +26,7 @@ static inline void __list_add(struct list_head *n, struct list_head *prev,
 	prev->next = n;
 }
 
-static inline void __list_del(struct list_head *prev,
-	struct list_head *next)
+static inline void __list_del(struct list_head *prev, struct list_head *next)
 {
 	prev->next = next;
 	next->prev = prev;
@@ -72,4 +71,4 @@ static inline uint8_t list_empty(struct list_head *head)
 #define list_first_entry(ptr, type, member) \
 	list_entry((ptr)->next, type, member)
 
-#endif /* _LIST_H_ */
+#endif				/* _LIST_H_ */

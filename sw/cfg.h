@@ -33,6 +33,6 @@ struct cfg {
 	char server_host[MAX_HOST_LEN];
 	uint8_t sample_interval;
 	uint8_t samples_per_report;
-} __attribute__((__packed__)); 
+} __attribute__ ((__packed__));
 
 #endif

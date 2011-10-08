@@ -21,7 +21,7 @@ void timer_mod(struct timer_queue *timer, uint32_t expire)
 {
 	struct list_head *tmp;
 
-	timer_del(timer);		
+	timer_del(timer);
 
 	timer->expire = expire;
 
@@ -53,7 +53,8 @@ void timer_expire(uint32_t jiffies)
 	struct list_head *tmp;
 
 	list_for_each_safe(cur, tmp, &timer_list) {
-		struct timer_queue *timer = list_entry(cur, struct timer_queue, list);
+		struct timer_queue *timer =
+		    list_entry(cur, struct timer_queue, list);
 
 		if (timer->expire <= jiffies) {
 			list_del(&timer->list);
@@ -61,4 +62,3 @@ void timer_expire(uint32_t jiffies)
 		}
 	}
 }
-

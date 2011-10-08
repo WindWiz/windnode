@@ -25,7 +25,7 @@ volatile uint32_t jiffies;
 
 /* XXX: Calculate depending on F_CPU and HZ, at the moment this is only
    accurate for 16 MHz F_CPU and HZ > 1 */
-#define TIMER_PRESCALER_REG (_BV(CS11) | _BV(CS10)) /* 64 */
+#define TIMER_PRESCALER_REG (_BV(CS11) | _BV(CS10))	/* 64 */
 #define TIMER_PRESCALER (64)
 
 SIGNAL(TIMER1_COMPA_vect)
@@ -46,7 +46,7 @@ uint32_t time_jiffies(void)
 
 void time_init(void)
 {
-	jiffies = -120*HZ; /* Trigger wraparound early to find bugs */
+	jiffies = -120 * HZ;	/* Trigger wraparound early to find bugs */
 
 	/* Setup timer hardware */
 	TCCR1B = _BV(WGM12);	/* CTC mode */
@@ -56,5 +56,3 @@ void time_init(void)
 	/* Start timer */
 	TCCR1B |= TIMER_PRESCALER_REG;
 }
-
-
