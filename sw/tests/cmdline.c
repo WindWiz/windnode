@@ -6,6 +6,19 @@
 #include "errno.h"
 #include "command.h"
 
+static int cmd_illegal(char *arg, char *buf, size_t buflen)
+{
+	size_t i;
+
+	/* Writes outside allowed buflen */
+	for (i = 0; i <= buflen; i++)
+		buf[i] = (char)(i + 'A');
+
+	return buflen + 1;
+}
+
+static DECLARE_COMMAND(illegal, "ILLEGAL", cmd_illegal);
+
 static int cmd_pi(char *arg, char *buf, size_t buflen)
 {
 	if (buflen < 4) {
@@ -65,6 +78,7 @@ static int cmd_mul(char *arg, char *buf, size_t buflen)
 static DECLARE_COMMAND(mul, "MUL", cmd_mul);
 
 static struct command *commandlist[] = {
+	&illegal,
 	&pi,
 	&square,
 	&mul,
@@ -106,8 +120,9 @@ static struct test testvectors[] = {
 	/* Outbuffer overruns */
 	{"PI;PI;PI;PI;PI;PI", "3.14;3.14;3.14;3.14;3.14;E;"},
 	{"MUL 10000 10000; MUL 10000 10000; MUL 10000 10000;",
-		    "100000000;100000000;ENOMEM;"},
-	{"INVALID; COMMAND; UNKNOWN; COMMAND", "ENOENT;ENOENT;ENOENT;ENOEN;"}
+	    "100000000;100000000;ENOMEM;"},
+	{"INVALID; COMMAND; UNKNOWN; COMMAND", "ENOENT;ENOENT;ENOENT;ENOEN;"},
+	{"ILLEGAL;MUL 10 10", "ABCDEFGHIJKLMNOPQRSTUVWXYZ;"}
 };
 
 int main(void)
