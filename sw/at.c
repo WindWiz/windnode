@@ -167,7 +167,7 @@ int at_info(FILE * stream, char *cmd, char *buf, size_t buflen, uint16_t timeout
 	size = at_response(stream, buf, buflen, timeout);
 	if (size <= 0) {
 		at_discard_until(stream, '\n');
-		return ret;
+		return size;
 	}
 
 	if (size >= strlen(AT_ERROR) && !strcmp(buf, AT_ERROR))
