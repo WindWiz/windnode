@@ -30,6 +30,7 @@
 #include "at.h"
 #include "time.h"
 #include "stackmon.h"
+#include "gsm.h"
 
 static FILE f_debug;
 static FILE f_gsm;
@@ -103,6 +104,43 @@ static int cmd_delay(char *arg, char *buf, size_t buflen)
 	return 2;
 }
 
+static int cmd_gsmstat(char *arg, char *buf, size_t buflen)
+{
+	int status = gsm_status(&f_gsm);
+	char msg[13];
+	size_t len;
+
+	if (status < 0)
+		return status;
+
+	switch (status) {
+	case GSM_DISCONNECTED:
+		strcpy(msg, "DISCONNECTED");
+		break;
+	case GSM_REGISTERED:
+		strcpy(msg, "REGISTERED");
+		break;
+	case GSM_SEARCHING:
+		strcpy(msg, "SEARCHING");
+		break;
+	case GSM_ROAMING:
+		strcpy(msg, "ROAMING");
+		break;
+	case GSM_UNKNOWN:
+	default:
+		strcpy(msg, "UNKNOWN");
+		break;
+
+	}
+
+	len = strlen(msg);
+	if (len > buflen)
+		len = buflen;
+
+	strcpy(buf, msg);
+	return len;
+}
+
 /* Sorted by priority */
 static struct command *commandlist[] = {
 	CREATE_COMMAND("STACK", cmd_stackdepth),
@@ -111,6 +149,7 @@ static struct command *commandlist[] = {
 	CREATE_COMMAND("GSMPWR", cmd_gsmpwr),
 	CREATE_COMMAND("GSMRST", cmd_gsmrst),
 	CREATE_COMMAND("GSMRESP", cmd_gsmresp),
+	CREATE_COMMAND("GSMSTAT", cmd_gsmstat),
 	COMMANDLIST_END,
 };
 
