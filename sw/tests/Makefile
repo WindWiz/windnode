@@ -31,7 +31,7 @@ timers: $(timers_OBJS)
 TEST_timers: timers
 	./timers
 
-gsm_OBJS=gsm.o time.o $(WINDNODE)/at.o
+gsm_OBJS=gsm.o time.o $(WINDNODE)/at.o $(WINDNODE)/gsm.o
 gsm: $(gsm_OBJS)
 TEST_gsm: gsm
 	./gsm

@@ -29,10 +29,11 @@
 
 #include "at.h"
 #include "errno.h"
+#include "gsm.h"
 
 static FILE *f_gsm;
 
-#define GSM_DEVICE "/dev/ttyUSB1"
+#define GSM_DEVICE "/dev/ttyUSB0"
 #define APN "online.telia.se"
 #define SERVER_HOST "www.mag32.net"
 #define SERVER_PORT "80"
@@ -83,26 +84,26 @@ static bool test_invalid_info(void)
 	return true;
 }
 
-static bool wait_gsm_status(int status)
+static bool wait_gsm_status(int s)
 {
-	int gsm_status;
+	int status;
 	int attempt;
-	int len;
-	char buf[12];
 
 	attempt = 0;
 	while (attempt < 10) {
-		len = at_info(f_gsm, "AT+CREG?", buf, sizeof(buf), 1 * HZ);
-		ASSERT(len > 0, "AT+CREG? (%d), attempt %d", len, attempt);
-		sscanf(buf, "+CREG: 0,%d", &gsm_status);
+		status = gsm_status(f_gsm);
 
-		if (gsm_status == status)
+		if (status == s)
 			return true;
 
-		switch (gsm_status) {
+		switch (status) {
 		case 0:
 			printf("%s: gsm not registered, idle\n", __func__);
 			break;
+		case 1:
+			printf("%s: gsm registered\n", __func__);
+			break;
+
 		case 2:
 			printf("%s: not registered, searching\n", __func__);
 			break;
@@ -120,34 +121,7 @@ static bool wait_gsm_status(int status)
 		usleep(1000000);
 		attempt++;
 	}
-
 	return false;
-}
-
-static bool activate_gprs(void)
-{
-	int len;
-	int gprs_status;
-	char buf[50];
-
-	len = at_info(f_gsm, "AT#GPRS?", buf, sizeof(buf), 10 * HZ);
-	ASSERT(len == 8, "AT#GPRS? (%d)\n", len);
-	len = sscanf(buf, "#GPRS: %d", &gprs_status);
-	ASSERT(len == 1, "sscanf %d", len);
-
-	if (gprs_status == 0) {
-		char ip[20];
-
-		len = at_info(f_gsm, "AT#GPRS=1", buf, sizeof(buf), 10 * HZ);
-		ASSERT(len > 5, "AT#GPRS first activate (%d)", len);
-		ASSERT(strncmp(buf, "+IP: ", 5) == 0, "buf mismatch '%s'", buf);
-		len = sscanf(buf, "+IP: %s", ip);
-		ASSERT(len == 1, "sscanf(IP) = %d", len);
-		printf("%s: IP is '%s'\n", __func__, ip);
-	} else
-		printf("%s: IP already assigned\n", __func__);
-
-	return true;
 }
 
 static bool test_multiple_commands(void)
@@ -155,8 +129,7 @@ static bool test_multiple_commands(void)
 	int len;
 	char buf[100];
 
-	if (!wait_gsm_status(1))
-		return false;
+	ASSERT(wait_gsm_status(1), "wait_gsm_status(%d) failed", 1);
 
 	len = at_simple(f_gsm, "AT+CGDCONT=1,\"IP\",\"" APN "\"", 1 * HZ);
 	ASSERT(len == 0, "AT+CGDCONT (%d)\n", len);
@@ -167,8 +140,8 @@ static bool test_multiple_commands(void)
 	len = at_simple(f_gsm, "AT#PASSW=\"\"", 1 * HZ);
 	ASSERT(len == 0, "AT#USERID (%d)\n", len);
 
-	if (!activate_gprs())
-		return false;
+	len = gsm_activate_context(f_gsm);
+	ASSERT(len == 0, "gsm_activate_context() = %d", len);
 
 	/* GPRS should be active at this point. Activating it again should result
 	   in EFAULT. Verify! */
@@ -220,11 +193,10 @@ static bool test_rawdata_transfer(void)
 	char http_resp[1024 * 100];
 	size_t resp_size = sizeof(http_resp);
 
-	if (!wait_gsm_status(1))
-		return false;
+	ASSERT(wait_gsm_status(1), "wait_gsm_status(%d) failed", 1);
 
-	if (!activate_gprs())
-		return false;
+	ret = gsm_activate_context(f_gsm);
+	ASSERT(ret == 0, "gsm_activate_context() = %d", ret);
 
 	ret = at_cmd(f_gsm, "AT#SKTD=0," SERVER_PORT ",\"" SERVER_HOST "\",0,0");
 	ASSERT(ret == 0, "at_cmd(AT#SKTD) = %d\n", ret);
