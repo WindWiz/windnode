@@ -1,0 +1,6 @@
+#!/bin/sh
+# WARNING! This is most likely HIGHLY inaccurate. It can be used to determine
+# an UPPER BOUND of maxium stack usage. It assumes no function recursion takes
+# place.
+
+grep -rn "frame" $* | cut -d" " -f5 | awk '{s+=$1} END {print s}'

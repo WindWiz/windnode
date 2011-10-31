@@ -25,6 +25,7 @@ PROGPORT=/dev/avrusb0
 AVRDUDE=avrdude -p $(MCU) -c $(PROGTYPE) -P $(PROGPORT)
 MAGBOOT=magboot.py $(PROGPORT) $(MCU) -z -i
 ELFFUSE=./elf-fuse
+MAXSTACK=./maxstack
 
 PROG=windnode
 IHEX=windnode.ihex
@@ -33,6 +34,7 @@ SRCS=main.c hwparam.c uart.c adc.c wind.c eeprom_cfg.c swuart.c ringbuf.c \
 	command.c time.c timer_queue.c stackmon.c telit.c at.c gsm.c
 OBJS=$(SRCS:%.c=%.o)
 DEPS=$(SRCS:%.c=%.d)
+ASM=$(SRCS:%.c=%.s)
 FUSES=$(PROG).fuses
 
 MCU=atmega328p
@@ -61,6 +63,13 @@ $(BIN): $(PROG)
 %.d: %.c
 	$(CC) $(CFLAGS) -MM -o $@ $^
 
+%.s: %.c
+	$(CC) -S $(CFLAGS) -o $@ $^
+
+.PHONY: maxstack
+maxstack: $(ASM)
+	$(MAXSTACK) $(ASM)
+
 # Flash firmware
 .PHONY: flash	
 flash: $(IHEX)
@@ -85,7 +94,7 @@ fuseprog: $(FUSES)
 # Clean up all generated content
 .PHONY: clean
 clean:
-	rm -f $(OBJS) $(PROG) $(IHEX) $(FUSES) $(DEPS)
+	rm -f $(OBJS) $(PROG) $(IHEX) $(FUSES) $(DEPS) $(ASM)
 
 include $(FUSES)
 include $(DEPS)
