@@ -19,7 +19,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "ringbuf.h"
-#include "config.h"
 
 #define STARTBIT (0)
 #define STOPBIT (1)
